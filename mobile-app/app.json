@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Canteen Feedback",
+    "slug": "canteen-feedback",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1A1A2E"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.canteen.feedback",
+      "versionCode": 1,
+      "permissions": []
+    },
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    }
+  }
+}
