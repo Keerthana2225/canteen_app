@@ -15,11 +15,9 @@ import {
 import StarRating from '../components/StarRating';
 
 // ────────────────────────────────────────────────────────────
-// ⚠️  UPDATE THIS to your PC's local IP address
-//     Run `ipconfig` on your PC and use the IPv4 address
-//     Example: http://192.168.1.100:8000
 // ────────────────────────────────────────────────────────────
-const API_URL = 'http://10.100.201.76:8000';
+import CONFIG from '../config';
+const API_URL = CONFIG.API_URL;
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner'];
 

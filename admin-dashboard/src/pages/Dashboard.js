@@ -6,7 +6,7 @@ import {
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 
-const API = 'http://localhost:8000';
+const API = `http://${window.location.hostname}:8000`;
 const COLORS = ['#1565C0','#1976D2','#1E88E5','#2196F3','#42A5F5'];
 
 const CATEGORIES = [

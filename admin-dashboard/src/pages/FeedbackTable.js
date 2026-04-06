@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:8000';
+const API = `http://${window.location.hostname}:8000`;
 
 const MEAL_COLORS = {
   Breakfast: { bg: '#E3F2FD', color: '#1565C0', emoji: '🌅' },
