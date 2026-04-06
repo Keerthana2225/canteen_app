@@ -12,7 +12,7 @@ import * as IntentLauncher from 'expo-intent-launcher';
 // ── Constants ─────────────────────────────────────────────────
 const STORAGE_KEY = '@canteen_server_url';
 const DEFAULT_PORT = '8000';
-const API_URL      = 'http://192.168.1.38:8000'; // fallback
+const API_URL      = 'http://172.19.165.219:8000'; // your PC's Wi-Fi IP
 
 // Hardcoded credentials (no backend auth needed)
 const USERS = {
@@ -51,11 +51,13 @@ const INITIAL_RATINGS = {
 };
 
 // ── Login Screen ──────────────────────────────────────────────
-function LoginScreen({ onLogin }) {
+function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [shakeAnim] = useState(new Animated.Value(0));
+  const [showSettings, setShowSettings] = useState(false);
+  const [ipInput, setIpInput] = useState('');
 
   const shake = () => {
     Animated.sequence([
@@ -77,6 +79,21 @@ function LoginScreen({ onLogin }) {
       shake();
       Alert.alert('❌ Invalid Credentials', 'Please check your username and password.');
     }
+  };
+
+  const openSettings = () => {
+    const match = apiUrl ? apiUrl.match(/http:\/\/([^:]+):(\d+)/) : null;
+    setIpInput(match ? match[1] : '');
+    setShowSettings(true);
+  };
+
+  const saveSettings = () => {
+    const ip = ipInput.trim();
+    if (!ip) { Alert.alert('\u26a0\ufe0f Invalid IP', 'Please enter a valid IP address.'); return; }
+    const newUrl = `http://${ip}:8000`;
+    if (onSaveUrl) onSaveUrl(newUrl);
+    setShowSettings(false);
+    Alert.alert('\u2705 Server Saved', `Server set to:\n${newUrl}\n\nRestart the app if already logged in.`);
   };
 
   return (
@@ -148,9 +165,63 @@ function LoginScreen({ onLogin }) {
 
           </Animated.View>
 
+          {/* Settings button */}
+          <TouchableOpacity onPress={openSettings} style={ls.settingsBtn}>
+            <Text style={ls.settingsBtnText}>⚙️  Configure Server IP</Text>
+          </TouchableOpacity>
+
           <Text style={ls.footer}>🔒 Secure internal system — Brakes India</Text>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ── Server Settings Modal ── */}
+      <Modal
+        visible={showSettings}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <View style={ls.modalOverlay}>
+          <View style={ls.modalBox}>
+            <Text style={ls.modalTitle}>⚙️ Server Settings</Text>
+            <Text style={ls.modalSub}>Enter your PC's Wi-Fi IP address</Text>
+
+            <Text style={ls.modalLabel}>Current server</Text>
+            <Text style={ls.modalCurrent}>{apiUrl || 'Not set'}</Text>
+
+            <Text style={ls.modalLabel}>New IP Address</Text>
+            <View style={ls.modalInputRow}>
+              <Text style={ls.modalPrefix}>http://</Text>
+              <TextInput
+                style={ls.modalInput}
+                value={ipInput}
+                onChangeText={setIpInput}
+                placeholder="172.19.165.219"
+                placeholderTextColor="#A0AEC0"
+                keyboardType="numeric"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={saveSettings}
+              />
+              <Text style={ls.modalSuffix}>:8000</Text>
+            </View>
+
+            <View style={ls.modalHintBox}>
+              <Text style={ls.modalHint}>💡 On your PC, open PowerShell and run:</Text>
+              <Text style={ls.modalHintCode}>ipconfig</Text>
+              <Text style={ls.modalHint}>Look for "Wireless LAN" → IPv4 Address</Text>
+            </View>
+
+            <TouchableOpacity style={ls.modalSaveBtn} onPress={saveSettings} activeOpacity={0.85}>
+              <Text style={ls.modalSaveBtnText}>💾  Save & Connect</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={ls.modalCancelBtn} onPress={() => setShowSettings(false)}>
+              <Text style={ls.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -201,6 +272,42 @@ const ls = StyleSheet.create({
   loginBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', letterSpacing: 0.5 },
 
   footer:     { textAlign: 'center', fontSize: 11, color: '#90CAF9', marginTop: 24 },
+  settingsBtn: { alignItems: 'center', marginTop: 8, paddingVertical: 6 },
+  settingsBtnText: { color: '#90CAF9', fontSize: 13, textDecorationLine: 'underline' },
+  // Modal styles
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'flex-end',
+  },
+  modalBox: {
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 28, paddingBottom: 40, gap: 12,
+    elevation: 20, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 20,
+  },
+  modalTitle:   { fontSize: 22, fontWeight: '800', color: '#0D47A1' },
+  modalSub:     { fontSize: 14, color: '#718096', marginTop: -6 },
+  modalLabel:   { fontSize: 12, fontWeight: '700', color: '#4A5568', letterSpacing: 0.5 },
+  modalCurrent: { fontSize: 13, color: '#1565C0', fontWeight: '600', backgroundColor: '#EBF8FF', padding: 10, borderRadius: 10 },
+  modalInputRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F7FAFC', borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#BEE3F8', paddingHorizontal: 12,
+  },
+  modalPrefix:  { fontSize: 14, color: '#718096', fontWeight: '600' },
+  modalInput:   { flex: 1, paddingVertical: 14, fontSize: 16, color: '#1A202C', fontWeight: '600' },
+  modalSuffix:  { fontSize: 14, color: '#718096', fontWeight: '600' },
+  modalHintBox: { backgroundColor: '#FFFFF0', borderRadius: 12, padding: 12, gap: 4, borderLeftWidth: 3, borderLeftColor: '#ECC94B' },
+  modalHint:    { fontSize: 12, color: '#744210' },
+  modalHintCode:{ fontSize: 13, fontWeight: '800', color: '#744210', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  modalSaveBtn: {
+    backgroundColor: '#1565C0', borderRadius: 14,
+    paddingVertical: 16, alignItems: 'center',
+    elevation: 4, shadowColor: '#1565C0', shadowOpacity: 0.4, shadowRadius: 8,
+    marginTop: 4,
+  },
+  modalSaveBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  modalCancelBtn:   { alignItems: 'center', paddingVertical: 10 },
+  modalCancelText:  { color: '#A0AEC0', fontSize: 14 },
 });
 
 // ── Mobile Admin Dashboard ─────────────────────────────────────
@@ -860,8 +967,13 @@ export default function App() {
 
   const handleLogin = (user, role) => setAuthState({ user, role });
   const handleLogout = () => setAuthState({ user: null, role: null });
+  const handleSaveUrl = (url) => {
+    setApiUrl(url);
+    AsyncStorage.setItem(STORAGE_KEY, url);
+  };
 
-  if (!authState.user) return <LoginScreen onLogin={handleLogin} />;
+  if (!authState.user)
+    return <LoginScreen onLogin={handleLogin} apiUrl={apiUrl} onSaveUrl={handleSaveUrl} />;
 
   if (authState.role === 'admin')
     return <AdminDashboard apiUrl={apiUrl} onLogout={handleLogout} />;

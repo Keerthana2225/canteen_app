@@ -15,7 +15,8 @@
     "android": {
       "package": "com.canteen.feedback",
       "versionCode": 1,
-      "permissions": []
+      "permissions": [],
+      "usesCleartextTraffic": true
     },
     "web": {},
     "extra": {

@@ -22,10 +22,9 @@ if exist "android\gradlew.bat" (
     cd ..
 )
 
-:: Force remove locked android folder using robocopy trick
+:: Force remove locked android folder
 if exist "android" (
     echo   Cleaning previous android folder...
-    robocopy "%TEMP%" "android" /MIR /NFL /NDL /NJH /NJS >nul 2>nul
     rmdir /S /Q "android" >nul 2>nul
     if exist "android" (
         echo   WARNING: Could not fully remove android folder. Retrying...
@@ -34,7 +33,9 @@ if exist "android" (
     )
 )
 
-echo Y | call npx expo prebuild -p android --clean
+set EXPO_NO_GIT_STATUS=1
+set EXPO_NO_TELEMETRY=1
+call npx expo prebuild -p android --clean
 
 :: Patch Expo / React Native build.gradle incompatibility
 echo   Patching build configs...
