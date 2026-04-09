@@ -215,6 +215,24 @@ netsh advfirewall firewall add rule name="FastAPI Port 8000" dir=in action=allow
 
 ---
 
+## 🛠️ Troubleshooting & Known Issues
+
+If you encounter connection or build issues, refer to these common solutions we have established:
+
+### 1. "Backend not reachable" / Network Error on Mobile
+* **Cause 1: Public Network Profile (Windows)**. Windows Defender Firewall automatically blocks incoming connections if your Wi-Fi or Mobile Hotspot is set to "Public". **Fix:** Go to `Settings > Network & internet > Wi-Fi`, click your network name, and change the profile to **Private**.
+* **Cause 2: Missing Cleartext Traffic Permission**. Android 9+ strictly blocks unencrypted `http://` traffic in release APKs. **Fix:** This is now handled automatically. The `build-apk.bat` script forcefully injects `android:usesCleartextTraffic="true"` into `AndroidManifest.xml` right before bundling. Over time, be sure to always use `build-apk.bat` so this patch isn't lost!
+
+### 2. Admin Dashboard shows an empty table
+* **Cause**: If you connect your laptop to a new network (like a mobile hotspot), your local IP address changes. If the IP was hardcoded in React, it will fail to load in the browser.
+* **Fix**: The React dashboard now uses `http://${window.location.hostname}:8000` as the API URL. It dynamically looks at whatever network IP you happen to be visiting from, completely eliminating the need to ever hardcode an IP address into the admin panel again. Just refresh your browser!
+
+### 3. `EBUSY: resource busy or locked` when running `build-apk.bat`
+* **Cause**: Your computer is locking the `android` folder, stopping the build script from refreshing it.
+* **Fix**: Close any Android files currently open in your code editor (like `AndroidManifest.xml`). Also ensure no terminal tabs or Windows File Explorer windows are currently looking inside the `android` folder. Run the script again once the lock dies.
+
+---
+
 ## ⚠️ Important Notes
 
 | # | Note |
@@ -246,5 +264,12 @@ If you need a debug build (connects to metro bundler for live reload):
 ```
 
 ---
+
+---
+
+## 📅 Recent Changes (Final Delivery)
+- Fixed vertical artifact strip on TSF logo.
+- Reverted custom non-standard 'a' font matching standard `Brakes India`.
+- Final release APK build deployed via automated scripts.
 
 *Built for Brakes India Pvt Ltd — TSF Division | 2026*

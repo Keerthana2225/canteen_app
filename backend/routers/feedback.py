@@ -3,15 +3,16 @@ routers/feedback.py — Core feedback API endpoints.
 
 Endpoints:
   POST /feedback          — Submit anonymous feedback
-  GET  /feedback/summary  — Aggregated averages for admin dashboard
-  GET  /feedback/all      — All records (date fields hidden from web UI)
+  GET  /feedback/summary  — Aggregated averages (with optional month/year filter)
+  GET  /feedback/all      — All records (paginated)
+  GET  /feedback/count    — Total record count
 """
 
 from datetime import date
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract
 
 import models
 import schemas
@@ -53,10 +54,12 @@ def submit_feedback(payload: schemas.FeedbackCreate, db: Session = Depends(get_d
 # ─────────────────────────────────────────────────────────────
 @router.get("/summary", response_model=schemas.SummaryResponse)
 def get_summary(
-    meal_type:    Optional[str] = Query(None, description="Breakfast | Lunch | Dinner"),
-    canteen_name: Optional[str] = Query(None),
+    meal_type:    Optional[str]  = Query(None, description="Breakfast | Lunch | Dinner"),
+    canteen_name: Optional[str]  = Query(None),
     from_date:    Optional[date] = Query(None),
     to_date:      Optional[date] = Query(None),
+    month:        Optional[int]  = Query(None, ge=1, le=12, description="Filter by month (1-12)"),
+    year:         Optional[int]  = Query(None, description="Filter by year e.g. 2026"),
     db: Session = Depends(get_db),
 ):
     """Return average ratings and total feedback count, with optional filters."""
@@ -70,6 +73,10 @@ def get_summary(
         q = q.filter(models.Feedback.feedback_date >= from_date)
     if to_date:
         q = q.filter(models.Feedback.feedback_date <= to_date)
+    if month:
+        q = q.filter(extract("month", models.Feedback.feedback_date) == month)
+    if year:
+        q = q.filter(extract("year", models.Feedback.feedback_date) == year)
 
     results = q.with_entities(
         func.avg(models.Feedback.food_quality).label("avg_food_quality"),
@@ -104,6 +111,8 @@ def get_all_feedback(
     canteen_name: Optional[str]  = Query(None),
     from_date:    Optional[date] = Query(None),
     to_date:      Optional[date] = Query(None),
+    month:        Optional[int]  = Query(None, ge=1, le=12),
+    year:         Optional[int]  = Query(None),
     skip:         int            = Query(0,  ge=0),
     limit:        int            = Query(20, ge=1, le=200),
     db: Session = Depends(get_db),
@@ -123,6 +132,10 @@ def get_all_feedback(
         q = q.filter(models.Feedback.feedback_date >= from_date)
     if to_date:
         q = q.filter(models.Feedback.feedback_date <= to_date)
+    if month:
+        q = q.filter(extract("month", models.Feedback.feedback_date) == month)
+    if year:
+        q = q.filter(extract("year", models.Feedback.feedback_date) == year)
 
     records = q.order_by(models.Feedback.id.desc()).offset(skip).limit(limit).all()
     return records
@@ -137,6 +150,8 @@ def get_feedback_count(
     canteen_name: Optional[str]  = Query(None),
     from_date:    Optional[date] = Query(None),
     to_date:      Optional[date] = Query(None),
+    month:        Optional[int]  = Query(None, ge=1, le=12),
+    year:         Optional[int]  = Query(None),
     db: Session = Depends(get_db),
 ):
     q = db.query(func.count(models.Feedback.id))
@@ -148,4 +163,8 @@ def get_feedback_count(
         q = q.filter(models.Feedback.feedback_date >= from_date)
     if to_date:
         q = q.filter(models.Feedback.feedback_date <= to_date)
+    if month:
+        q = q.filter(extract("month", models.Feedback.feedback_date) == month)
+    if year:
+        q = q.filter(extract("year", models.Feedback.feedback_date) == year)
     return {"total": q.scalar()}

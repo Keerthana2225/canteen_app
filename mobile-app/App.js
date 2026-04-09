@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  TextInput, Animated, Alert, Platform, Modal,
+  TextInput, Animated, Alert, Platform, Modal, Image,
   KeyboardAvoidingView, StatusBar, SafeAreaView, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
+import { Ionicons } from '@expo/vector-icons';
 
 // ── Constants ─────────────────────────────────────────────────
 import CONFIG from './config';
@@ -30,18 +31,18 @@ const MEAL_TYPES = [
 const RATING_FIELDS = [
   { key: 'food_quality', label: 'Food Quality', emoji: '🍱' },
   { key: 'food_taste', label: 'Food Taste', emoji: '😋' },
+  { key: 'food_hygiene', label: 'Food Hygiene', emoji: '🧼' },
   { key: 'cleanliness', label: 'Cleanliness', emoji: '✨' },
   { key: 'staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳' },
-  { key: 'food_hygiene', label: 'Food Hygiene', emoji: '🧼' },
 ];
 
 const MOOD = {
   0: { face: '😶', color: '#A0AEC0', label: '' },
   1: { face: '😢', color: '#E53E3E', label: 'Poor' },
-  2: { face: '😕', color: '#ED8936', label: 'Fair' },
-  3: { face: '😐', color: '#ECC94B', label: 'Good' },
-  4: { face: '😊', color: '#48BB78', label: 'Great' },
-  5: { face: '🤩', color: '#38A169', label: 'Excellent!' },
+  2: { face: '😕', color: '#ED8936', label: 'Below Average' },
+  3: { face: '😐', color: '#ECC94B', label: 'Average' },
+  4: { face: '😊', color: '#48BB78', label: 'Good' },
+  5: { face: '🤩', color: '#38A169', label: 'Excellent' },
 };
 
 const OVERALL_FACE = ['🤔', '😢', '😕', '😐', '😊', '🤩'];
@@ -108,16 +109,20 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
 
           {/* Logo area */}
           <View style={ls.logoArea}>
-            <View style={ls.logoCircle}>
-              <Text style={ls.logoEmoji}>🍽️</Text>
+            <View style={ls.tsfContainer}>
+              <Image
+                source={require('./assets/tsf_logo_white.png')}
+                style={ls.tsfLogoImg}
+                resizeMode="contain"
+              />
             </View>
+            <Text style={ls.tsfBrand}>Brakes India</Text>
             <Text style={ls.appName}>Canteen Feedback</Text>
-            <Text style={ls.appSub}>Brakes India Pvt Ltd — TSF</Text>
           </View>
 
           {/* Card */}
           <Animated.View style={[ls.card, { transform: [{ translateX: shakeAnim }] }]}>
-            <Text style={ls.cardTitle}>Welcome Back</Text>
+            <Text style={ls.cardTitle}>Welcome</Text>
             <Text style={ls.cardSub}>Sign in to continue</Text>
 
             {/* Username */}
@@ -153,7 +158,7 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
                   autoCorrect={false}
                 />
                 <TouchableOpacity onPress={() => setShowPass(p => !p)} style={ls.eyeBtn}>
-                  <Text style={{ fontSize: 18 }}>{showPass ? '🙈' : '👁️'}</Text>
+                  <Ionicons name={showPass ? 'eye-off' : 'eye'} size={22} color="#A0AEC0" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -197,11 +202,13 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
                 style={ls.modalInput}
                 value={ipInput}
                 onChangeText={setIpInput}
-                placeholder="172.19.165.219"
+                placeholder="e.g. 10.100.201.78"
                 placeholderTextColor="#A0AEC0"
-                keyboardType="numeric"
+                keyboardType="default"
+                inputMode="url"
                 autoCapitalize="none"
                 autoCorrect={false}
+                selectTextOnFocus={true}
                 returnKeyType="done"
                 onSubmitEditing={saveSettings}
               />
@@ -230,16 +237,16 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
 const ls = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#0D47A1' },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  logoArea: { alignItems: 'center', marginBottom: 32, gap: 8 },
-  logoCircle: {
-    width: 90, height: 90, borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)',
+  logoArea: { alignItems: 'center', marginBottom: 38, gap: 8 },
+  tsfContainer: {
+    width: 86, height: 86,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
-  logoEmoji: { fontSize: 42 },
-  appName: { fontSize: 26, fontWeight: '800', color: '#FFFFFF' },
-  appSub: { fontSize: 13, color: '#90CAF9', fontWeight: '500' },
+  tsfLogoImg: { width: 66, height: 66 },
+  tsfBrand: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1 },
+  appName: { fontSize: 22, fontWeight: '600', color: '#90CAF9', letterSpacing: 0, textAlign: 'center', marginTop: -4 },
   card: {
     backgroundColor: '#FFFFFF', borderRadius: 24,
     padding: 28, gap: 16,
@@ -311,31 +318,66 @@ const ls = StyleSheet.create({
   modalCancelText: { color: '#A0AEC0', fontSize: 14 },
 });
 
+// ── Stat Progress Bar ─────────────────────────────────────────
+function StatBar({ label, emoji, value, color }) {
+  const pct = ((value / 5) * 100).toFixed(0);
+  const mood = value >= 4.5 ? '🤩' : value >= 4 ? '😊' : value >= 3 ? '😐' : value >= 2 ? '😕' : value > 0 ? '😢' : '—';
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontSize: 16 }}>{emoji}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: '#2D3748' }}>{label}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontSize: 14 }}>{mood}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', color }}>{value.toFixed(1)}</Text>
+          <Text style={{ fontSize: 12, color: '#A0AEC0' }}>/5</Text>
+        </View>
+      </View>
+      <View style={{ height: 8, backgroundColor: '#EDF2F7', borderRadius: 8, overflow: 'hidden' }}>
+        <View style={{ height: 8, width: `${pct}%`, backgroundColor: color, borderRadius: 8 }} />
+      </View>
+    </View>
+  );
+}
+
 // ── Mobile Admin Dashboard ─────────────────────────────────────
 function AdminDashboard({ apiUrl, onLogout }) {
   const [summary, setSummary] = useState(null);
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [tab, setTab] = useState('summary'); // 'summary' | 'records'
+  const [tab, setTab] = useState('summary');
+  const [monthlyData, setMonthlyData] = useState(null);
+  const [selMonth, setSelMonth] = useState(new Date().getMonth() + 1);
+  const [selYear]  = useState(new Date().getFullYear());
+  const [loadingM, setLoadingM] = useState(false);
+  const [kioskMode, setKioskMode] = useState(false);
+  const [filterMeal, setFilterMeal] = useState('All');
 
   const CATS = [
-    { key: 'avg_food_quality', label: 'Food Quality', emoji: '🍱', color: '#1565C0' },
-    { key: 'avg_food_taste', label: 'Food Taste', emoji: '😋', color: '#7B1FA2' },
-    { key: 'avg_cleanliness', label: 'Cleanliness', emoji: '✨', color: '#00695C' },
-    { key: 'avg_staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳', color: '#E65100' },
-    { key: 'avg_food_hygiene', label: 'Food Hygiene', emoji: '🧼', color: '#1976D2' },
+    { key: 'avg_food_quality',   fbKey: 'food_quality',   label: 'Food Quality',   emoji: '🍱', color: '#1565C0' },
+    { key: 'avg_food_taste',     fbKey: 'food_taste',     label: 'Food Taste',     emoji: '😋', color: '#7B1FA2' },
+    { key: 'avg_food_hygiene',   fbKey: 'food_hygiene',   label: 'Food Hygiene',   emoji: '🧼', color: '#1976D2' },
+    { key: 'avg_cleanliness',    fbKey: 'cleanliness',    label: 'Cleanliness',    emoji: '✨', color: '#00695C' },
+    { key: 'avg_staff_behavior', fbKey: 'staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳', color: '#E65100' },
   ];
 
-  const moodOf = v =>
-    v >= 4.5 ? '🤩' : v >= 4 ? '😊' : v >= 3 ? '😐' : v >= 2 ? '😕' : v > 0 ? '😢' : '—';
+  const MEAL_COLORS = {
+    Breakfast: { bg: '#EBF8FF', color: '#1565C0', border: '#BEE3F8', emoji: '🌅' },
+    Lunch:     { bg: '#F0FFF4', color: '#276749', border: '#9AE6B4', emoji: '☀️' },
+    Dinner:    { bg: '#FAF5FF', color: '#553C9A', border: '#D6BCFA', emoji: '🌙' },
+  };
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [s, f] = await Promise.all([
         fetch(`${apiUrl}/feedback/summary`).then(r => r.json()),
-        fetch(`${apiUrl}/feedback/all`).then(r => r.json()),
+        fetch(`${apiUrl}/feedback/all?limit=200`).then(r => r.json()),
       ]);
       setSummary(s);
       setFeedback(Array.isArray(f) ? f : []);
@@ -351,39 +393,26 @@ function AdminDashboard({ apiUrl, onLogout }) {
       const url = `${apiUrl}/feedback/export`;
       const filename = `canteen_feedback_${new Date().toISOString().slice(0, 10)}.xlsx`;
       const fileUri = FileSystem.documentDirectory + filename;
-
-      // Download the file first
       const downloadResult = await FileSystem.downloadAsync(url, fileUri);
       if (downloadResult.status !== 200) throw new Error('Download failed');
-
       if (Platform.OS === 'android') {
-        // Android: get a content:// URI and open with "Open with" dialog
         const contentUri = await FileSystem.getContentUriAsync(fileUri);
         await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-          data: contentUri,
-          flags: 1,           // FLAG_GRANT_READ_URI_PERMISSION
+          data: contentUri, flags: 1,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
       } else {
-        // iOS: use share sheet
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          dialogTitle: 'Open Excel Report',
-          UTI: 'com.microsoft.excel.xlsx',
+          dialogTitle: 'Open Excel Report', UTI: 'com.microsoft.excel.xlsx',
         });
       }
     } catch (e) {
-      // Fallback to share sheet if intent fails
       try {
         const filename = `canteen_feedback_${new Date().toISOString().slice(0, 10)}.xlsx`;
         const fileUri = FileSystem.documentDirectory + filename;
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(fileUri, {
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Open or Save Excel Report',
-          });
-        }
+        if (await Sharing.isAvailableAsync())
+          await Sharing.shareAsync(fileUri, { mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       } catch (_) {
         Alert.alert('❌ Export Failed', 'Cannot open the file.\nMake sure Excel or Google Sheets is installed.');
       }
@@ -391,183 +420,358 @@ function AdminDashboard({ apiUrl, onLogout }) {
     setExporting(false);
   }, [apiUrl]);
 
+  const fetchMonthly = useCallback(async (m, y) => {
+    setLoadingM(true);
+    try {
+      const r = await fetch(`${apiUrl}/analytics/monthly?year=${y}&month=${m}`);
+      setMonthlyData(await r.json());
+    } catch (_) { Alert.alert('Error', 'Cannot load analytics'); }
+    setLoadingM(false);
+  }, [apiUrl]);
+
   useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchMonthly(selMonth, selYear); }, [fetchMonthly, selMonth, selYear]);
 
   const overall = summary
-    ? (CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length)
+    ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length
     : 0;
 
-  const MEAL_COLORS = {
-    Breakfast: { bg: '#E3F2FD', color: '#1565C0', emoji: '🌅' },
-    Lunch: { bg: '#E8F5E9', color: '#2E7D32', emoji: '☀️' },
-    Dinner: { bg: '#EDE7F6', color: '#4527A0', emoji: '🌙' },
-  };
+  const healthLabel = overall >= 4.5 ? { text: 'Excellent', color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' }
+    : overall >= 4   ? { text: 'Good',      color: '#2B6CB0', bg: '#EBF8FF', border: '#90CDF4' }
+    : overall >= 3   ? { text: 'Average',   color: '#744210', bg: '#FFFBEB', border: '#FAF089' }
+    : overall >= 2   ? { text: 'Poor',      color: '#9B2C2C', bg: '#FFF5F5', border: '#FEB2B2' }
+    : { text: 'No Data', color: '#718096', bg: '#F7FAFC', border: '#E2E8F0' };
+
+  // Records filtered by meal
+  const filteredFeedback = filterMeal === 'All'
+    ? feedback
+    : feedback.filter(f => f.meal_type === filterMeal);
+
+  // Meal-type breakdown counts
+  const mealCounts = ['Breakfast', 'Lunch', 'Dinner'].map(m => ({
+    meal: m,
+    count: feedback.filter(f => f.meal_type === m).length,
+  }));
+  const totalCount = feedback.length || 1;
+
+  if (kioskMode) return <FeedbackForm apiUrl={apiUrl} onBack={() => setKioskMode(false)} />;
 
   return (
     <SafeAreaView style={ad.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
 
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={ad.header}>
         <View style={{ flex: 1 }}>
-          <Text style={ad.headerTitle}>📊 Admin Dashboard</Text>
-          <Text style={ad.headerSub}>Canteen Analytics — Brakes India</Text>
+          <Text style={ad.headerTitle}>Feedback Admin</Text>
+          <Text style={ad.headerSub}>TSF Brakes India — Control Center</Text>
         </View>
-        <TouchableOpacity
-          style={ad.exportBtn}
-          onPress={handleExport}
-          disabled={exporting}
-          activeOpacity={0.85}
-        >
-          <Text style={ad.exportText}>{exporting ? '⏳...' : '📥 Export'}</Text>
+        <TouchableOpacity style={ad.refreshIconBtn} onPress={fetchData}>
+          <Text style={{ fontSize: 18 }}>🔄</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={ad.exportBtn} onPress={handleExport} disabled={exporting} activeOpacity={0.85}>
+          <Text style={ad.exportText}>{exporting ? '⏳' : '📥 Excel'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={ad.logoutBtn} onPress={onLogout}>
           <Text style={ad.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
-      <View style={ad.tabs}>
-        {[{ id: 'summary', label: '📈 Summary' }, { id: 'records', label: '📋 Records' }].map(t => (
-          <TouchableOpacity
-            key={t.id}
-            style={[ad.tab, tab === t.id && ad.tabOn]}
-            onPress={() => setTab(t.id)}
-          >
-            <Text style={[ad.tabText, tab === t.id && ad.tabTextOn]}>{t.label}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={ad.refreshBtn} onPress={fetchData}>
-          <Text style={{ fontSize: 18 }}>🔄</Text>
-        </TouchableOpacity>
+      {/* ── Tabs ── */}
+      <View style={ad.tabsScroll}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ad.tabs}>
+          {[
+            { id: 'summary', label: '📊  Summary' },
+            { id: 'records', label: `📋  Records (${feedback.length})` },
+          ].map(t => (
+            <TouchableOpacity
+              key={t.id}
+              style={[ad.tab, tab === t.id && ad.tabOn]}
+              onPress={() => setTab(t.id)}
+            >
+              <Text style={[ad.tabText, tab === t.id && ad.tabTextOn]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {loading ? (
         <View style={ad.center}>
           <ActivityIndicator size="large" color="#1565C0" />
-          <Text style={{ color: '#5C85C9', marginTop: 12 }}>Loading...</Text>
+          <Text style={{ color: '#5C85C9', marginTop: 12, fontWeight: '600' }}>Loading dashboard...</Text>
         </View>
       ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 14 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }} showsVerticalScrollIndicator={false}>
 
+          {/* ═══════════════════════════════════════════ SUMMARY TAB ══ */}
           {tab === 'summary' && (
             <>
-              {/* Total count */}
-              <View style={ad.totalCard}>
-                <Text style={ad.totalEmoji}>📝</Text>
-                <View>
-                  <Text style={ad.totalLabel}>Total Feedback</Text>
-                  <Text style={ad.totalCount}>{summary?.total_count ?? 0}</Text>
-                </View>
-                <View style={{ marginLeft: 'auto', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 40 }}>{moodOf(overall)}</Text>
-                  <Text style={ad.overallScore}>{overall.toFixed(1)} / 5.0</Text>
-                </View>
-              </View>
-
-              {/* Overall health bar */}
-              <View style={ad.healthCard}>
-                <Text style={ad.healthLabel}>Overall Satisfaction</Text>
-                <View style={ad.healthBarBg}>
-                  <View style={[ad.healthBarFill, {
-                    width: `${(overall / 5) * 100}%`,
-                    backgroundColor: overall >= 4 ? '#38A169' : overall >= 3 ? '#ECC94B' : '#E53E3E',
-                  }]} />
-                </View>
-                <Text style={ad.healthPct}>{((overall / 5) * 100).toFixed(0)}% satisfaction rate</Text>
-              </View>
-
-              {/* Category Cards */}
-              {CATS.map(c => {
-                const val = summary?.[c.key] || 0;
-                const full = Math.round(val);
-                return (
-                  <View key={c.key} style={[ad.catCard, { borderLeftColor: c.color }]}>
-                    <View style={ad.catLeft}>
-                      <Text style={{ fontSize: 28 }}>{c.emoji}</Text>
-                      <View>
-                        <Text style={ad.catLabel}>{c.label}</Text>
-                        <Text style={{ fontSize: 11, color: '#A0AEC0' }}>
-                          {'★'.repeat(full)}{'☆'.repeat(5 - full)}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={ad.catRight}>
-                      <Text style={[ad.catScore, { color: c.color }]}>{val.toFixed(1)}</Text>
-                      <Text style={{ fontSize: 22 }}>{moodOf(val)}</Text>
-                    </View>
+              {/* KPI Hero Card */}
+              <View style={ad.heroCard}>
+                <View style={ad.heroLeft}>
+                  <Text style={ad.heroLabel}>Total Responses</Text>
+                  <Text style={ad.heroCount}>{summary?.total_count ?? 0}</Text>
+                  <View style={[ad.healthBadge, { backgroundColor: healthLabel.bg, borderColor: healthLabel.border }]}>
+                    <Text style={[ad.healthBadgeText, { color: healthLabel.color }]}>● {healthLabel.text}</Text>
                   </View>
-                );
-              })}
+                </View>
+                <View style={ad.heroRight}>
+                  <Text style={ad.heroScoreEmoji}>
+                    {overall >= 4.5 ? '🤩' : overall >= 4 ? '😊' : overall >= 3 ? '😐' : overall >= 2 ? '😕' : '😶'}
+                  </Text>
+                  <Text style={ad.heroScore}>{overall.toFixed(2)}</Text>
+                  <Text style={ad.heroScoreSub}>Avg Score / 5</Text>
+                </View>
+              </View>
 
-              {/* Meal Breakdown */}
-              <Text style={ad.sectionTitle}>🍴 By Meal Type</Text>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {['Breakfast', 'Lunch', 'Dinner'].map(m => {
-                  const mc = MEAL_COLORS[m];
-                  const count = feedback.filter(r => r.meal_type === m).length;
-                  const pct = feedback.length ? Math.round(count / feedback.length * 100) : 0;
+              {/* Meal Type Distribution */}
+              <View style={ad.sectionCard}>
+                <Text style={ad.sectionCardTitle}>🍽️  Meal Distribution</Text>
+                {mealCounts.map(({ meal, count }) => {
+                  const mc = MEAL_COLORS[meal];
+                  const pct = Math.round((count / totalCount) * 100);
                   return (
-                    <View key={m} style={[ad.mealCard, { backgroundColor: mc.bg, flex: 1 }]}>
-                      <Text style={{ fontSize: 28 }}>{mc.emoji}</Text>
-                      <Text style={[ad.mealLabel, { color: mc.color }]}>{m}</Text>
-                      <Text style={[ad.mealCount, { color: mc.color }]}>{count}</Text>
-                      <Text style={{ fontSize: 11, color: mc.color, opacity: 0.7 }}>{pct}%</Text>
+                    <View key={meal} style={{ marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 15 }}>{mc.emoji}</Text>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: '#2D3748' }}>{meal}</Text>
+                        </View>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: mc.color }}>{count} ({pct}%)</Text>
+                      </View>
+                      <View style={{ height: 8, backgroundColor: '#EDF2F7', borderRadius: 8, overflow: 'hidden' }}>
+                        <View style={{ height: 8, width: `${pct}%`, backgroundColor: mc.color, borderRadius: 8 }} />
+                      </View>
                     </View>
                   );
                 })}
               </View>
+
+              {/* All-time Rating Bars */}
+              <View style={ad.sectionCard}>
+                <Text style={ad.sectionCardTitle}>⭐  Overall Rating Breakdown</Text>
+                {CATS.map(c => (
+                  <StatBar
+                    key={c.key}
+                    label={c.label} emoji={c.emoji}
+                    value={summary?.[c.key] || 0}
+                    color={c.color}
+                  />
+                ))}
+              </View>
+
+              {/* Monthly Analytics Section */}
+              <Text style={ad.sectionTitle}>📅  Monthly Report — {selYear}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {MONTHS.map((mn, i) => (
+                    <TouchableOpacity
+                      key={mn}
+                      style={[ad.monthBtn, selMonth === i + 1 && ad.monthBtnOn]}
+                      onPress={() => setSelMonth(i + 1)}
+                    >
+                      <Text style={[ad.monthBtnTxt, selMonth === i + 1 && ad.monthBtnTxtOn]}>{mn}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {loadingM ? (
+                <ActivityIndicator size="large" color="#1565C0" style={{ marginTop: 20 }} />
+              ) : monthlyData ? (
+                <>
+                  {monthlyData.total_count > 0 ? (
+                    <>
+                      {/* ── Monthly Overview Hero Card ── */}
+                      {(() => {
+                        const monthAvg = CATS.map(c => monthlyData[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length;
+                        const mHealth = monthAvg >= 4.5 ? { label: 'Excellent', color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' }
+                          : monthAvg >= 4   ? { label: 'Good',      color: '#1A5276', bg: '#EBF8FF', border: '#90CDF4' }
+                          : monthAvg >= 3   ? { label: 'Average',   color: '#7B4F00', bg: '#FFFBEB', border: '#FAD961' }
+                          : monthAvg >= 2   ? { label: 'Poor',      color: '#9B2C2C', bg: '#FFF5F5', border: '#FEB2B2' }
+                          : { label: 'No Data',  color: '#718096', bg: '#F7FAFC', border: '#E2E8F0' };
+                        const mMood = monthAvg >= 4.5 ? '🤩' : monthAvg >= 4 ? '😊' : monthAvg >= 3 ? '😐' : monthAvg >= 2 ? '😕' : '😶';
+                        const pct = Math.round((monthAvg / 5) * 100);
+                        return (
+                          <View style={ad.monthOverviewCard}>
+                            {/* Left: response count */}
+                            <View style={ad.monthOverviewLeft}>
+                              <Text style={ad.monthOverviewMonthLabel}>{MONTHS[selMonth - 1].toUpperCase()} {selYear}</Text>
+                              <Text style={ad.monthOverviewCount}>{monthlyData.total_count}</Text>
+                              <Text style={ad.monthOverviewCountLabel}>Responses</Text>
+                              <View style={[ad.monthOverviewBadge, { backgroundColor: mHealth.bg, borderColor: mHealth.border }]}>
+                                <Text style={[ad.monthOverviewBadgeText, { color: mHealth.color }]}>● {mHealth.label}</Text>
+                              </View>
+                            </View>
+
+                            {/* Divider */}
+                            <View style={ad.monthOverviewDivider} />
+
+                            {/* Right: score */}
+                            <View style={ad.monthOverviewRight}>
+                              <Text style={ad.monthOverviewMood}>{mMood}</Text>
+                              <Text style={ad.monthOverviewScore}>{monthAvg.toFixed(2)}</Text>
+                              <Text style={ad.monthOverviewScoreSub}>out of 5.0</Text>
+                              {/* Mini progress */}
+                              <View style={ad.monthOverviewBar}>
+                                <View style={[ad.monthOverviewBarFill, { width: `${pct}%` }]} />
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })()}
+
+                      {/* ── Rating Breakdown ── */}
+                      <View style={ad.sectionCard}>
+                        <Text style={ad.sectionCardTitle}>📊  {MONTHS[selMonth - 1]} Ratings</Text>
+                        {CATS.map(c => (
+                          <StatBar
+                            key={c.key}
+                            label={c.label} emoji={c.emoji}
+                            value={monthlyData[c.key] || 0}
+                            color={c.color}
+                          />
+                        ))}
+                      </View>
+
+                      {/* ── Meal Type Split ── */}
+                      <View style={ad.sectionCard}>
+                        <Text style={ad.sectionCardTitle}>🍽️  Meal Type Split</Text>
+                        {['Breakfast', 'Lunch', 'Dinner'].map(m => {
+                          const mc = MEAL_COLORS[m];
+                          const mCount = monthlyData[`${m.toLowerCase()}_count`] || 0;
+                          const mPct = Math.round((mCount / (monthlyData.total_count || 1)) * 100);
+                          return (
+                            <View key={m} style={{ marginBottom: 14 }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                  <View style={[ad.mealDot, { backgroundColor: mc.color }]} />
+                                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2D3748' }}>{mc.emoji}  {m}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  <Text style={{ fontSize: 16, fontWeight: '900', color: mc.color }}>{mCount}</Text>
+                                  <Text style={{ fontSize: 12, color: '#A0AEC0', fontWeight: '600' }}>({mPct}%)</Text>
+                                </View>
+                              </View>
+                              <View style={{ height: 10, backgroundColor: '#EDF2F7', borderRadius: 10, overflow: 'hidden' }}>
+                                <View style={{ height: 10, width: `${mPct}%`, backgroundColor: mc.color, borderRadius: 10 }} />
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </>
+                  ) : (
+                    <View style={ad.emptyBox}>
+                      <Text style={{ fontSize: 44, marginBottom: 8 }}>📭</Text>
+                      <Text style={{ fontSize: 17, fontWeight: '800', color: '#4A5568' }}>No data for {MONTHS[selMonth - 1]}</Text>
+                      <Text style={{ fontSize: 13, color: '#A0AEC0', marginTop: 6, textAlign: 'center' }}>No feedback was submitted this month yet.</Text>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={ad.emptyBox}>
+                  <Text style={{ fontSize: 13, color: '#A0AEC0' }}>Select a month to load analytics</Text>
+                </View>
+              )}
             </>
           )}
 
+          {/* ═══════════════════════════════════════════ RECORDS TAB ══ */}
           {tab === 'records' && (
             <>
-              <Text style={ad.sectionTitle}>Recent Submissions ({feedback.length})</Text>
-              {feedback.length === 0 ? (
-                <View style={ad.center}>
-                  <Text style={{ fontSize: 40 }}>📭</Text>
-                  <Text style={{ color: '#A0AEC0', marginTop: 8 }}>No feedback yet</Text>
-                </View>
-              ) : feedback.slice(0, 20).map((row, i) => {
-                const mc = MEAL_COLORS[row.meal_type] || MEAL_COLORS.Lunch;
-                const avg = [row.food_quality, row.food_taste, row.cleanliness, row.staff_behavior, row.food_hygiene]
-                  .filter(v => v > 0).reduce((a, b) => a + b, 0) /
-                  [row.food_quality, row.food_taste, row.cleanliness, row.staff_behavior, row.food_hygiene].filter(v => v > 0).length;
-                return (
-                  <View key={i} style={ad.recordCard}>
-                    <View style={ad.recordTop}>
-                      <View style={[ad.mealPill, { backgroundColor: mc.bg }]}>
-                        <Text style={{ fontSize: 14 }}>{mc.emoji}</Text>
-                        <Text style={[ad.mealPillText, { color: mc.color }]}>{row.meal_type}</Text>
-                      </View>
-                      <Text style={[ad.recordScore, { color: avg >= 4 ? '#38A169' : avg >= 3 ? '#ECC94B' : '#E53E3E' }]}>
-                        {avg ? avg.toFixed(1) : '—'} ⭐
+              {/* Filter bar */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {['All', 'Breakfast', 'Lunch', 'Dinner'].map(m => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[
+                        ad.filterChip,
+                        filterMeal === m && ad.filterChipOn,
+                        m !== 'All' && filterMeal === m && { backgroundColor: MEAL_COLORS[m]?.color, borderColor: MEAL_COLORS[m]?.color },
+                      ]}
+                      onPress={() => setFilterMeal(m)}
+                    >
+                      <Text style={[ad.filterChipText, filterMeal === m && ad.filterChipTextOn]}>
+                        {m === 'All' ? '🗂️  All' : `${MEAL_COLORS[m].emoji}  ${m}`}
                       </Text>
-                    </View>
-                    <View style={ad.recordFields}>
-                      {[
-                        { label: '🍱 Quality', val: row.food_quality },
-                        { label: '😋 Taste', val: row.food_taste },
-                        { label: '✨ Clean', val: row.cleanliness },
-                        { label: '👨‍🍳 Staff', val: row.staff_behavior },
-                        { label: '🧼 Hygiene', val: row.food_hygiene },
-                      ].map(f => (
-                        <View key={f.label} style={ad.recordField}>
-                          <Text style={ad.recordFieldLabel}>{f.label}</Text>
-                          <Text style={ad.recordFieldVal}>{f.val || '—'}/5</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {filteredFeedback.length === 0 ? (
+                <View style={ad.emptyBox}>
+                  <Text style={{ fontSize: 48, marginBottom: 10 }}>📭</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#4A5568' }}>No Records Found</Text>
+                  <Text style={{ fontSize: 13, color: '#A0AEC0', marginTop: 6, textAlign: 'center' }}>
+                    {filterMeal === 'All' ? 'No feedback has been submitted yet.' : `No ${filterMeal} feedback submitted yet.`}
+                  </Text>
+                </View>
+              ) : (
+                filteredFeedback.map((item, idx) => {
+                  const mc = MEAL_COLORS[item.meal_type] || { bg: '#F7FAFC', color: '#4A5568', border: '#E2E8F0', emoji: '🍽️' };
+                  const avg = ([
+                    item.food_quality, item.food_taste, item.food_hygiene,
+                    item.staff_behavior, item.cleanliness,
+                  ].reduce((a, b) => a + b, 0) / 5);
+                  const avgMood = avg >= 4.5 ? '🤩' : avg >= 4 ? '😊' : avg >= 3 ? '😐' : avg >= 2 ? '😕' : '😢';
+                  return (
+                    <View key={item.id ?? idx} style={ad.recordCard}>
+                      {/* Card Header */}
+                      <View style={ad.recordHeader}>
+                        <View style={[ad.mealPill, { backgroundColor: mc.bg, borderColor: mc.border }]}>
+                          <Text style={{ fontSize: 13 }}>{mc.emoji}</Text>
+                          <Text style={[ad.mealPillText, { color: mc.color }]}>{item.meal_type}</Text>
                         </View>
-                      ))}
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text style={{ fontSize: 20 }}>{avgMood}</Text>
+                            <Text style={[ad.recordScore, { color: avg >= 4 ? '#276749' : avg >= 3 ? '#744210' : '#9B2C2C' }]}>
+                              {avg.toFixed(1)}
+                            </Text>
+                            <Text style={{ fontSize: 12, color: '#A0AEC0', fontWeight: '600' }}>/5</Text>
+                          </View>
+                          <Text style={{ fontSize: 11, color: '#A0AEC0' }}>#{item.id}</Text>
+                        </View>
+                      </View>
+
+                      {/* Divider */}
+                      <View style={{ height: 1, backgroundColor: '#EDF2F7' }} />
+
+                      {/* Rating rows */}
+                      {CATS.map(c => {
+                        const val = item[c.fbKey] || 0;
+                        return (
+                          <View key={c.key} style={ad.ratingRow}>
+                            <Text style={{ fontSize: 14 }}>{c.emoji}</Text>
+                            <Text style={ad.ratingLabel}>{c.label}</Text>
+                            <View style={{ flexDirection: 'row', gap: 2, marginLeft: 'auto' }}>
+                              {[1,2,3,4,5].map(s => (
+                                <Text key={s} style={{ fontSize: 14, color: s <= val ? '#FFD700' : '#CBD5E0' }}>★</Text>
+                              ))}
+                            </View>
+                            <Text style={[ad.ratingVal, { color: c.color }]}>{val}</Text>
+                          </View>
+                        );
+                      })}
+
+                      {/* Comment */}
+                      {item.comments ? (
+                        <View style={ad.commentBox}>
+                          <Text style={ad.commentLabel}>💬 Comment</Text>
+                          <Text style={ad.commentText}>"{item.comments}"</Text>
+                        </View>
+                      ) : null}
                     </View>
-                    {row.comments ? (
-                      <Text style={ad.recordComment}>💬 {row.comments}</Text>
-                    ) : null}
-                  </View>
-                );
-              })}
+                  );
+                })
+              )}
             </>
           )}
 
-          <View style={{ height: 32 }} />
+          <View style={{ height: 40 }} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -576,74 +780,137 @@ function AdminDashboard({ apiUrl, onLogout }) {
 
 const ad = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F0F7FF' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+
+  // Header
   header: {
-    backgroundColor: '#0D47A1', paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 16 : 10,
-    paddingBottom: 16, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#0D47A1', paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 14 : 10,
+    paddingBottom: 14, flexDirection: 'row',
+    alignItems: 'center', gap: 8,
   },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
-  headerSub: { fontSize: 11, color: '#90CAF9', marginTop: 2 },
-  exportBtn: { backgroundColor: '#FFD54F', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
+  headerSub: { fontSize: 11, color: '#90CAF9' },
+  refreshIconBtn: { padding: 8 },
+  exportBtn: { backgroundColor: '#FFD54F', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
   exportText: { color: '#0D47A1', fontSize: 12, fontWeight: '800' },
-  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
-  logoutText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
-  tabs: {
-    flexDirection: 'row', backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#BBDEFB',
-    alignItems: 'center',
+  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
+  logoutText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+
+  // Tabs
+  tabsScroll: { backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', elevation: 3 },
+  tabs: { paddingHorizontal: 16, gap: 32 },
+  tab: { paddingVertical: 14, borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  tabOn: { borderBottomColor: '#0D47A1' },
+  tabText: { fontSize: 14, fontWeight: '700', color: '#A0AEC0' },
+  tabTextOn: { color: '#0D47A1' },
+
+  // Hero KPI card
+  heroCard: {
+    backgroundColor: '#0D47A1', borderRadius: 22, padding: 24,
+    flexDirection: 'row', alignItems: 'center',
+    elevation: 10, shadowColor: '#0D47A1', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 10 },
   },
-  tab: { flex: 1, paddingVertical: 14, alignItems: 'center' },
-  tabOn: { borderBottomWidth: 3, borderBottomColor: '#1565C0' },
-  tabText: { fontSize: 13, fontWeight: '600', color: '#90CAF9' },
-  tabTextOn: { color: '#1565C0' },
-  refreshBtn: { paddingHorizontal: 16 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  totalCard: {
-    backgroundColor: '#1565C0', borderRadius: 16, padding: 20,
-    flexDirection: 'row', alignItems: 'center', gap: 14,
+  heroLeft: { flex: 1, gap: 8 },
+  heroLabel: { fontSize: 13, color: '#90CAF9', fontWeight: '600' },
+  heroCount: { fontSize: 52, fontWeight: '900', color: '#FFFFFF', letterSpacing: -2 },
+  healthBadge: { alignSelf: 'flex-start', borderRadius: 20, borderWidth: 1.5, paddingHorizontal: 12, paddingVertical: 5 },
+  healthBadgeText: { fontSize: 12, fontWeight: '800' },
+  heroRight: { alignItems: 'center', gap: 4 },
+  heroScoreEmoji: { fontSize: 44 },
+  heroScore: { fontSize: 32, fontWeight: '900', color: '#FFD54F', letterSpacing: -1 },
+  heroScoreSub: { fontSize: 11, color: '#90CAF9', fontWeight: '600' },
+
+  // Section card (white rounded container)
+  sectionCard: {
+    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10,
   },
-  totalEmoji: { fontSize: 36 },
-  totalLabel: { fontSize: 12, color: '#90CAF9', fontWeight: '600' },
-  totalCount: { fontSize: 40, fontWeight: '800', color: '#FFFFFF' },
-  overallScore: { fontSize: 14, fontWeight: '700', color: '#FFD700' },
-  healthCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16,
-    gap: 10, borderWidth: 1, borderColor: '#BBDEFB',
+  sectionCardTitle: { fontSize: 16, fontWeight: '800', color: '#1A202C', marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1A202C', marginTop: 4 },
+
+  // Monthly buttons
+  monthBtn: {
+    backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+    borderWidth: 1.5, borderColor: '#E2E8F0',
+    elevation: 1,
   },
-  healthLabel: { fontSize: 13, fontWeight: '700', color: '#0D47A1' },
-  healthBarBg: { height: 12, backgroundColor: '#E2E8F0', borderRadius: 10 },
-  healthBarFill: { height: 12, borderRadius: 10 },
-  healthPct: { fontSize: 12, color: '#5C85C9', textAlign: 'center' },
-  catCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderLeftWidth: 4, borderWidth: 1, borderColor: '#BBDEFB',
+  monthBtnOn: { backgroundColor: '#0D47A1', borderColor: '#0D47A1', elevation: 4 },
+  monthBtnTxt: { fontSize: 13, fontWeight: '700', color: '#4A5568' },
+  monthBtnTxtOn: { color: '#FFFFFF' },
+
+  // Monthly Overview Hero Card
+  monthOverviewCard: {
+    backgroundColor: '#0D47A1', borderRadius: 22, padding: 22,
+    flexDirection: 'row', alignItems: 'stretch',
+    elevation: 10, shadowColor: '#0D47A1', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 10 },
+    gap: 0,
   },
-  catLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  catLabel: { fontSize: 15, fontWeight: '700', color: '#1A202C' },
-  catRight: { alignItems: 'center', gap: 4 },
-  catScore: { fontSize: 26, fontWeight: '800' },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#0D47A1' },
-  mealCard: {
-    borderRadius: 12, padding: 14, alignItems: 'center', gap: 4,
+  monthOverviewLeft: { flex: 1, gap: 6, paddingRight: 16 },
+  monthOverviewMonthLabel: { fontSize: 11, color: '#90CAF9', fontWeight: '800', letterSpacing: 1.5 },
+  monthOverviewCount: { fontSize: 50, fontWeight: '900', color: '#FFFFFF', letterSpacing: -2, lineHeight: 56 },
+  monthOverviewCountLabel: { fontSize: 13, color: '#90CAF9', fontWeight: '600', marginTop: -6 },
+  monthOverviewBadge: { alignSelf: 'flex-start', borderRadius: 20, borderWidth: 1.5, paddingHorizontal: 12, paddingVertical: 5, marginTop: 4 },
+  monthOverviewBadgeText: { fontSize: 12, fontWeight: '800' },
+
+  monthOverviewDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginHorizontal: 0 },
+
+  monthOverviewRight: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingLeft: 16 },
+  monthOverviewMood: { fontSize: 42, lineHeight: 54, includeFontPadding: false },
+  monthOverviewScore: { fontSize: 36, fontWeight: '900', color: '#FFD54F', letterSpacing: -1, lineHeight: 42 },
+  monthOverviewScoreSub: { fontSize: 11, color: '#90CAF9', fontWeight: '600' },
+  monthOverviewBar: { width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, marginTop: 6, overflow: 'hidden' },
+  monthOverviewBarFill: { height: 6, backgroundColor: '#FFD54F', borderRadius: 6 },
+
+  // Meal dot indicator
+  mealDot: { width: 10, height: 10, borderRadius: 5 },
+
+  // Records tab
+  filterChip: {
+    borderRadius: 22, borderWidth: 1.5, borderColor: '#E2E8F0',
+    paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#FFFFFF',
   },
-  mealLabel: { fontSize: 12, fontWeight: '700' },
-  mealCount: { fontSize: 26, fontWeight: '800' },
+  filterChipOn: { borderColor: '#0D47A1', backgroundColor: '#0D47A1' },
+  filterChipText: { fontSize: 13, fontWeight: '700', color: '#4A5568' },
+  filterChipTextOn: { color: '#FFFFFF' },
+
   recordCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16,
-    gap: 10, borderWidth: 1, borderColor: '#BBDEFB',
+    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16,
+    gap: 10, elevation: 3, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
   },
-  recordTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  mealPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  mealPillText: { fontSize: 12, fontWeight: '700' },
-  recordScore: { fontSize: 18, fontWeight: '800' },
-  recordFields: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  recordField: { alignItems: 'center', backgroundColor: '#F0F7FF', borderRadius: 8, padding: 8, minWidth: 60 },
-  recordFieldLabel: { fontSize: 10, color: '#5C85C9', fontWeight: '600' },
-  recordFieldVal: { fontSize: 14, fontWeight: '800', color: '#0D47A1' },
-  recordComment: { fontSize: 12, color: '#718096', fontStyle: 'italic', paddingTop: 4, borderTopWidth: 1, borderTopColor: '#EEF4FF' },
+  recordHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  mealPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderRadius: 22, paddingHorizontal: 12, paddingVertical: 7,
+    borderWidth: 1.5,
+  },
+  mealPillText: { fontSize: 13, fontWeight: '800' },
+  recordScore: { fontSize: 22, fontWeight: '900' },
+
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
+  ratingLabel: { fontSize: 13, fontWeight: '600', color: '#4A5568', flex: 1 },
+  ratingVal: { fontSize: 14, fontWeight: '800', minWidth: 16, textAlign: 'right' },
+
+  commentBox: { backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12, borderLeftWidth: 3, borderLeftColor: '#F6E05E' },
+  commentLabel: { fontSize: 11, fontWeight: '800', color: '#744210', marginBottom: 4, letterSpacing: 0.5 },
+  commentText: { fontSize: 13, color: '#744210', fontStyle: 'italic', lineHeight: 18 },
+
+  // Empty state
+  emptyBox: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 48, paddingHorizontal: 24,
+    backgroundColor: '#FFFFFF', borderRadius: 18,
+    elevation: 1,
+  },
+
+  // Legacy (keep for safety)
+  actionRow: { flexDirection: 'row', gap: 12 },
+  actionCard: { flex: 1, borderRadius: 20, padding: 20, elevation: 4 },
+  actionCardTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginTop: 8 },
+  actionCardSub: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, lineHeight: 18 },
 });
+
 
 // ── Star Row ──────────────────────────────────────────────────
 function StarRow({ emoji, label, value, onChange }) {
@@ -754,7 +1021,7 @@ const ob = StyleSheet.create({
 });
 
 // ── Feedback Form (User) ──────────────────────────────────────
-function FeedbackForm({ apiUrl, onLogout }) {
+function FeedbackForm({ apiUrl, onLogout, onBack }) {
   const [meal, setMeal] = useState('');
   const [ratings, setRatings] = useState({ ...INITIAL_RATINGS });
   const [comments, setComments] = useState('');
@@ -835,20 +1102,22 @@ function FeedbackForm({ apiUrl, onLogout }) {
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <View style={s.anonBadge}><Text style={s.anonText}>🔒 Anonymous</Text></View>
-          <TouchableOpacity style={s.logoutBtn} onPress={onLogout}>
-            <Text style={s.logoutText}>Exit</Text>
-          </TouchableOpacity>
+          {onBack ? (
+            <TouchableOpacity style={s.backBtn} onPress={onBack}>
+              <Text style={s.logoutText}>← Back</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={s.logoutBtn} onPress={onLogout}>
+              <Text style={s.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-          <View style={s.notice}>
-            <Text style={s.noticeIcon}>🛡️</Text>
-            <Text style={s.noticeText}>Completely anonymous. No name, ID or personal data is collected or stored.</Text>
-          </View>
+
 
           <View style={s.card}>
             <Text style={s.cardTitle}>🍴  Select Your Meal</Text>
@@ -907,7 +1176,8 @@ const s = StyleSheet.create({
   anonBadge: { backgroundColor: '#2D3748', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
   anonText: { color: '#68D391', fontSize: 11, fontWeight: '600' },
   logoutBtn: { backgroundColor: '#4A5568', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  logoutText: { color: '#E2E8F0', fontSize: 11, fontWeight: '700' },
+  backBtn: { backgroundColor: '#C53030', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  logoutText: { color: '#E2E8F0', fontSize: 12, fontWeight: '700' },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 14 },
   notice: {

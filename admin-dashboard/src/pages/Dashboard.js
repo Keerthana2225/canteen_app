@@ -1,341 +1,294 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
 import axios from 'axios';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell,
-} from 'recharts';
 
 const API = `http://${window.location.hostname}:8000`;
-const COLORS = ['#1565C0','#1976D2','#1E88E5','#2196F3','#42A5F5'];
 
-const CATEGORIES = [
-  { key: 'avg_food_quality',   label: 'Food Quality',  emoji: '🍱' },
-  { key: 'avg_food_taste',     label: 'Food Taste',    emoji: '😋' },
-  { key: 'avg_cleanliness',    label: 'Cleanliness',   emoji: '✨' },
-  { key: 'avg_staff_behavior', label: 'Staff Behavior',emoji: '👨‍🍳' },
-  { key: 'avg_food_hygiene',   label: 'Food Hygiene',  emoji: '🧼' },
+const CATS = [
+  { key: 'avg_food_quality',   label: 'Food Quality',   emoji: '🍱', color: '#1a56db' },
+  { key: 'avg_food_taste',     label: 'Food Taste',     emoji: '😋', color: '#7c3aed' },
+  { key: 'avg_food_hygiene',   label: 'Food Hygiene',   emoji: '🧼', color: '#0891b2' },
+  { key: 'avg_cleanliness',    label: 'Cleanliness',    emoji: '✨', color: '#059669' },
+  { key: 'avg_staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳', color: '#d97706' },
 ];
 
-const MOOD = v =>
-  v >= 4.5 ? '🤩' : v >= 4 ? '😊' : v >= 3 ? '😐' : v >= 2 ? '😕' : v > 0 ? '😢' : '—';
+const scoreColor = v => v >= 4 ? '#10b981' : v >= 3 ? '#f59e0b' : '#ef4444';
+const scoreFace  = v => v >= 4.5 ? '🤩' : v >= 4 ? '😊' : v >= 3 ? '😐' : v >= 2 ? '😕' : '😢';
 
-function Stars({ value }) {
-  const full = Math.round(value || 0);
+function StatCard({ emoji, label, value, color, loading }) {
+  const val = parseFloat(value) || 0;
+  const pct = (val / 5) * 100;
   return (
-    <span>
-      <span style={{ color: '#FFD700', fontSize: 14 }}>{'★'.repeat(full)}</span>
-      <span style={{ color: '#CBD5E0', fontSize: 14 }}>{'★'.repeat(5 - full)}</span>
-    </span>
+    <div style={{
+      background: '#fff',
+      borderRadius: 16,
+      padding: '22px 20px',
+      border: '1px solid #e2e8f0',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.09)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 6px rgba(0,0,0,0.04)'; }}
+    >
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: color, borderRadius: '16px 16px 0 0' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <div style={{
+          width: 44, height: 44,
+          background: color + '15',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22,
+        }}>{emoji}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor(val) }}>
+          {loading ? '—' : val.toFixed(1)} <span style={{ color: '#94a3b8', fontWeight: 400 }}>/ 5</span>
+        </div>
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 10 }}>{label}</div>
+      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 10 }}>
+        <div style={{
+          height: 6, borderRadius: 10,
+          width: loading ? '0%' : `${pct}%`,
+          background: `linear-gradient(90deg, ${color}, ${color}cc)`,
+          transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
+        }} />
+      </div>
+      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>{scoreFace(val)} {loading ? '' : `${pct.toFixed(0)}% satisfaction`}</div>
+    </div>
   );
 }
 
 export default function Dashboard() {
-  const navigate   = useNavigate();
-  const [summary,  setSummary]    = useState(null);
-  const [feedback, setFeedback]   = useState([]);
-  const [mealFilter, setMealFilter] = useState('');
-  const [fromDate,   setFromDate]   = useState('');
-  const [toDate,     setToDate]     = useState('');
-  const [loading,    setLoading]    = useState(true);
+  const [summary, setSummary] = useState(null);
+  const [feedback, setFeedback] = useState([]);
+  const [loading,  setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (mealFilter) params.meal_type = mealFilter;
-      if (fromDate)   params.from_date = fromDate;
-      if (toDate)     params.to_date   = toDate;
       const [s, f] = await Promise.all([
-        axios.get(`${API}/feedback/summary`, { params }),
-        axios.get(`${API}/feedback/all`,     { params }),
+        axios.get(`${API}/feedback/summary`),
+        axios.get(`${API}/feedback/all`),
       ]);
       setSummary(s.data);
       setFeedback(f.data);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setLoading(false);
-  }, [mealFilter, fromDate, toDate]);
+  }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const chartData = CATEGORIES.map(c => ({
-    name:  c.label,
-    value: parseFloat(((summary?.[c.key]) || 0).toFixed(1)),
-  }));
+  const overall = summary
+    ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length
+    : 0;
+
+  const mealCounts = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+  feedback.forEach(r => { if (mealCounts[r.meal_type] !== undefined) mealCounts[r.meal_type]++; });
+
+  const recent = [...feedback].slice(-6).reverse();
+
+  const exportExcel = async () => {
+    try {
+      const res = await fetch(`${API}/feedback/export`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `canteen_feedback_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link); link.click();
+      document.body.removeChild(link); URL.revokeObjectURL(link.href);
+    } catch { alert('❌ Export failed. Make sure the backend is running.'); }
+  };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F0F7FF' }}>
-
-      {/* ── Sidebar ─────────────────────────────────────── */}
+    <Layout
+      title="Home"
+      subtitle="Canteen feedback overview"
+      action={
+        <button onClick={exportExcel} style={{
+          background: 'linear-gradient(135deg, #1a56db, #3b82f6)',
+          color: '#fff', border: 'none',
+          padding: '10px 20px', borderRadius: 10,
+          fontWeight: 700, fontSize: 13,
+          boxShadow: '0 4px 12px rgba(26,86,219,0.35)',
+          transition: 'opacity 0.2s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+        >
+          📥 Export Excel
+        </button>
+      }
+    >
+      {/* ── Hero Score ── */}
       <div style={{
-        width: 220, background: '#1565C0', flexShrink: 0,
-        display: 'flex', flexDirection: 'column',
-        position: 'fixed', top: 0, left: 0,
-        height: '100vh', zIndex: 100,
+        background: 'linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #1a56db 100%)',
+        borderRadius: 20,
+        padding: '32px 36px',
+        marginBottom: 28,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 8px 40px rgba(10,22,40,0.25)',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
-        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-          <div style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>🍽️ Canteen</div>
-          <div style={{ color: '#90CAF9', fontSize: 12, marginTop: 4 }}>Admin Dashboard</div>
-        </div>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, background: 'rgba(59,130,246,0.08)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: -60, right: 100, width: 160, height: 160, background: 'rgba(59,130,246,0.05)', borderRadius: '50%' }} />
 
-        {[
-          { icon: '📊', label: 'Dashboard',        path: '/dashboard' },
-          { icon: '📋', label: 'Feedback Records', path: '/records'   },
-        ].map(item => (
-          <div key={item.label}
-            onClick={() => navigate(item.path)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '14px 20px', cursor: 'pointer',
-              color: window.location.pathname === item.path ? '#fff' : '#90CAF9',
-              background: window.location.pathname === item.path
-                ? 'rgba(255,255,255,0.15)' : 'transparent',
-              borderLeft: window.location.pathname === item.path
-                ? '3px solid #FFD54F' : '3px solid transparent',
-              fontSize: 14, fontWeight: 500,
-              transition: 'all 0.2s',
-            }}>
-            <span style={{ fontSize: 18 }}>{item.icon}</span>
-            {item.label}
+        <div>
+          <div style={{ color: '#93c5fd', fontSize: 12, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8 }}>
+            Overall Health Score
           </div>
-        ))}
-
-        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
-          <span style={{
-            display: 'inline-block', width: 8, height: 8,
-            background: '#69F0AE', borderRadius: '50%', marginRight: 8,
-          }} />
-          <span style={{ color: '#90CAF9', fontSize: 12 }}>API Online</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 56, fontWeight: 900, color: '#fff', letterSpacing: '-2px', lineHeight: 1 }}>
+              {loading ? '—' : overall.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 22, color: '#60a5fa', fontWeight: 600 }}>/5.0</span>
+          </div>
+          <div style={{ marginTop: 12, fontSize: 14, color: '#60a5fa', fontWeight: 500 }}>
+            {loading ? '' : `${summary?.total_count ?? 0} total responses collected`}
+          </div>
+          {/* Score bar */}
+          <div style={{ marginTop: 16, width: 260, height: 8, background: 'rgba(255,255,255,0.12)', borderRadius: 10 }}>
+            <div style={{
+              height: 8, borderRadius: 10,
+              width: `${(overall / 5 * 100).toFixed(0)}%`,
+              background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+              transition: 'width 1.2s ease',
+            }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 90, opacity: 0.9, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
+          {loading ? '⏳' : scoreFace(overall)}
         </div>
       </div>
 
-      {/* ── Main Content ─────────────────────────────────── */}
-      <div style={{ marginLeft: 220, flex: 1, padding: 28, overflowY: 'auto' }}>
+      {/* ── Category Cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 28 }}>
+        {CATS.map(c => (
+          <StatCard
+            key={c.key}
+            emoji={c.emoji}
+            label={c.label}
+            value={summary?.[c.key]}
+            color={c.color}
+            loading={loading}
+          />
+        ))}
+      </div>
 
-        {/* Topbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: '#0D47A1' }}>📊 Dashboard</div>
-            <div style={{ fontSize: 13, color: '#5C85C9', marginTop: 4 }}>
-              Canteen feedback summary &amp; analytics
-            </div>
-          </div>
-          <button
-            onClick={async () => {
-              try {
-                const params = new URLSearchParams();
-                if (mealFilter) params.append('meal_type', mealFilter);
-                if (fromDate)   params.append('from_date', fromDate);
-                if (toDate)     params.append('to_date', toDate);
-                const url = `${API}/feedback/export?${params.toString()}`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('Export failed');
-                const blob = await res.blob();
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `canteen_feedback_${new Date().toISOString().slice(0,10)}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-              } catch (e) {
-                alert('❌ Export failed. Make sure the backend is running.');
-              }
-            }}
-            style={{
-              background: '#1565C0', color: '#fff', border: 'none',
-              padding: '12px 22px', borderRadius: 10, fontSize: 14,
-              fontWeight: 700, cursor: 'pointer',
-            }}>
-            📥 Export to Excel
-          </button>
-        </div>
+      {/* ── Meal Breakdown + Recent ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 20, marginBottom: 28 }}>
 
-        {/* Filter Bar */}
-        <div style={{
-          background: '#fff', borderRadius: 14, padding: '16px 20px',
-          display: 'flex', gap: 16, alignItems: 'center',
-          marginBottom: 24, border: '1px solid #BBDEFB', flexWrap: 'wrap',
-        }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1565C0', marginBottom: 4 }}>MEAL TYPE</div>
-            <select
-              value={mealFilter}
-              onChange={e => setMealFilter(e.target.value)}
-              style={{ border: '1px solid #BBDEFB', borderRadius: 8, padding: '8px 12px', color: '#1565C0', background: '#F0F7FF', fontSize: 13 }}>
-              <option value="">All Meals</option>
-              <option>Breakfast</option>
-              <option>Lunch</option>
-              <option>Dinner</option>
-            </select>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1565C0', marginBottom: 4 }}>FROM DATE</div>
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-              style={{ border: '1px solid #BBDEFB', borderRadius: 8, padding: '8px 12px', color: '#1565C0', background: '#F0F7FF', fontSize: 13 }} />
-          </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1565C0', marginBottom: 4 }}>TO DATE</div>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-              style={{ border: '1px solid #BBDEFB', borderRadius: 8, padding: '8px 12px', color: '#1565C0', background: '#F0F7FF', fontSize: 13 }} />
-          </div>
-          <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
-            <button onClick={fetchData}
-              style={{ background: '#1565C0', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
-              Apply Filter
-            </button>
-            <button onClick={() => { setMealFilter(''); setFromDate(''); setToDate(''); }}
-              style={{ background: '#EEF4FF', color: '#1565C0', border: '1px solid #BBDEFB', padding: '9px 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
-              Reset
-            </button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14, marginBottom: 24 }}>
-          {/* Total */}
-          <div style={{ background: '#EEF4FF', borderRadius: 14, padding: '18px 12px', textAlign: 'center', border: '1px solid #BBDEFB' }}>
-            <div style={{ fontSize: 26 }}>📝</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#5C85C9', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 6 }}>Total Feedback</div>
-            <div style={{ fontSize: 36, fontWeight: 800, color: '#1565C0', marginTop: 4 }}>
-              {loading ? '—' : summary?.total_count ?? 0}
-            </div>
-            <div style={{ fontSize: 11, color: '#90CAF9' }}>responses</div>
-          </div>
-
-          {/* Category Cards */}
-          {CATEGORIES.map(c => {
-            const val = summary?.[c.key] || 0;
+        {/* Meal Counts */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>🍴 Feedback by Meal</div>
+          {[
+            { label: 'Breakfast', emoji: '🌅', color: '#1a56db', bg: '#eff6ff' },
+            { label: 'Lunch',     emoji: '☀️', color: '#059669', bg: '#ecfdf5' },
+            { label: 'Dinner',    emoji: '🌙', color: '#7c3aed', bg: '#f5f3ff' },
+          ].map(m => {
+            const count = mealCounts[m.label] || 0;
+            const pct   = feedback.length ? (count / feedback.length * 100).toFixed(0) : 0;
             return (
-              <div key={c.key} style={{ background: '#fff', borderRadius: 14, padding: '18px 12px', textAlign: 'center', border: '1px solid #BBDEFB' }}>
-                <div style={{ fontSize: 26 }}>{c.emoji}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#5C85C9', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 6 }}>{c.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: '#0D47A1', marginTop: 4 }}>
-                  {loading ? '—' : val.toFixed(1)}
+              <div key={m.label} style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      width: 32, height: 32,
+                      background: m.bg,
+                      borderRadius: 8,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 16,
+                    }}>{m.emoji}</span>
+                    <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{m.label}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontWeight: 800, fontSize: 16, color: m.color }}>{count}</span>
+                    <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 4 }}>{pct}%</span>
+                  </div>
                 </div>
-                <Stars value={val} />
-                <div style={{ fontSize: 22, marginTop: 6 }}>{MOOD(val)}</div>
+                <div style={{ height: 7, background: '#f1f5f9', borderRadius: 8 }}>
+                  <div style={{ height: 7, borderRadius: 8, width: `${pct}%`, background: m.color, transition: 'width 0.8s ease' }} />
+                </div>
               </div>
             );
           })}
         </div>
 
-        {/* Chart */}
-        <div style={{ background: '#fff', borderRadius: 14, padding: 24, border: '1px solid #BBDEFB', marginBottom: 24 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0D47A1', marginBottom: 20 }}>
-            📈 Average Ratings by Category
-          </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#BBDEFB" />
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#1565C0', fontWeight: 600 }} />
-              <YAxis domain={[0, 5]} tick={{ fontSize: 12, fill: '#1565C0' }} />
-              <Tooltip
-                contentStyle={{ background: '#fff', border: '1px solid #BBDEFB', borderRadius: 10, fontSize: 13 }}
-                formatter={v => [`${v} / 5.0`, 'Avg Rating']}
-              />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Insight Cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16, marginBottom:24 }}>
-
-          {/* Best Category */}
-          <div style={{ background:'#fff', borderRadius:14, padding:20, border:'1px solid #BBDEFB' }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'#5C85C9', marginBottom:12 }}>🏆 Best Rated Category</div>
-            {(() => {
-              if (!summary || !summary.total_count) return <div style={{ color:'#A0AEC0', textAlign:'center', padding:20 }}>No data yet</div>;
-              const best = CATEGORIES.reduce((a,b) => (summary[a.key]||0) > (summary[b.key]||0) ? a : b);
-              const val = summary[best.key] || 0;
-              return (
-                <div style={{ textAlign:'center', padding:'10px 0' }}>
-                  <div style={{ fontSize:48 }}>{best.emoji}</div>
-                  <div style={{ fontSize:18, fontWeight:800, color:'#0D47A1', marginTop:8 }}>{best.label}</div>
-                  <div style={{ fontSize:28, fontWeight:800, color:'#38A169', marginTop:4 }}>{val.toFixed(1)} ⭐</div>
+        {/* Recent Entries */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 18 }}>🕐 Recent Feedback</div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>Loading...</div>
+          ) : recent.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>No feedback yet</div>
+          ) : recent.map((r, i) => {
+            const avg = ((r.food_quality + r.food_taste + r.food_hygiene + r.cleanliness + r.staff_behavior) / 5).toFixed(1);
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '10px 0',
+                borderBottom: i < recent.length - 1 ? '1px solid #f1f5f9' : 'none',
+              }}>
+                <div style={{
+                  width: 38, height: 38,
+                  background: r.meal_type === 'Breakfast' ? '#eff6ff' : r.meal_type === 'Lunch' ? '#ecfdf5' : '#f5f3ff',
+                  borderRadius: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, flexShrink: 0,
+                }}>
+                  {r.meal_type === 'Breakfast' ? '🌅' : r.meal_type === 'Lunch' ? '☀️' : '🌙'}
                 </div>
-              );
-            })()}
-          </div>
-
-          {/* Needs Improvement */}
-          <div style={{ background:'#fff', borderRadius:14, padding:20, border:'1px solid #BBDEFB' }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'#5C85C9', marginBottom:12 }}>⚠️ Needs Improvement</div>
-            {(() => {
-              if (!summary || !summary.total_count) return <div style={{ color:'#A0AEC0', textAlign:'center', padding:20 }}>No data yet</div>;
-              const worst = CATEGORIES.reduce((a,b) => (summary[a.key]||0) < (summary[b.key]||0) ? a : b);
-              const val = summary[worst.key] || 0;
-              return (
-                <div style={{ textAlign:'center', padding:'10px 0' }}>
-                  <div style={{ fontSize:48 }}>{worst.emoji}</div>
-                  <div style={{ fontSize:18, fontWeight:800, color:'#0D47A1', marginTop:8 }}>{worst.label}</div>
-                  <div style={{ fontSize:28, fontWeight:800, color:'#E53E3E', marginTop:4 }}>{val.toFixed(1)} ⭐</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.meal_type}</div>
+                  {r.comments && (
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.comments}
+                    </div>
+                  )}
                 </div>
-              );
-            })()}
-          </div>
-
-          {/* Overall Health */}
-          <div style={{ background:'#fff', borderRadius:14, padding:20, border:'1px solid #BBDEFB' }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'#5C85C9', marginBottom:12 }}>📊 Overall Health Score</div>
-            {(() => {
-              if (!summary || !summary.total_count) return <div style={{ color:'#A0AEC0', textAlign:'center', padding:20 }}>No data yet</div>;
-              const avg = CATEGORIES.map(c => summary[c.key]||0).reduce((a,b)=>a+b,0) / CATEGORIES.length;
-              const pct = (avg/5*100).toFixed(0);
-              const color = avg>=4 ? '#38A169' : avg>=3 ? '#ECC94B' : '#E53E3E';
-              const face  = avg>=4.5?'🤩':avg>=4?'😊':avg>=3?'😐':avg>=2?'😕':'😢';
-              return (
-                <div style={{ textAlign:'center', padding:'10px 0' }}>
-                  <div style={{ fontSize:52 }}>{face}</div>
-                  <div style={{ fontSize:32, fontWeight:800, color, marginTop:8 }}>{avg.toFixed(1)} / 5.0</div>
-                  <div style={{ background:'#F0F7FF', borderRadius:20, height:10, marginTop:12 }}>
-                    <div style={{ background:color, borderRadius:20, height:10, width:`${pct}%`, transition:'width 0.5s' }}/>
-                  </div>
-                  <div style={{ fontSize:13, color:'#5C85C9', marginTop:6 }}>{pct}% satisfaction rate</div>
+                <div style={{
+                  fontWeight: 800, fontSize: 14,
+                  color: scoreColor(parseFloat(avg)),
+                  background: scoreColor(parseFloat(avg)) + '15',
+                  padding: '4px 10px', borderRadius: 8,
+                  flexShrink: 0,
+                }}>
+                  ⭐ {avg}
                 </div>
-              );
-            })()}
-          </div>
+              </div>
+            );
+          })}
         </div>
-
-        {/* Meal Breakdown */}
-        <div style={{ background:'#fff', borderRadius:14, padding:20, border:'1px solid #BBDEFB', marginBottom:24 }}>
-          <div style={{ fontSize:16, fontWeight:700, color:'#0D47A1', marginBottom:16 }}>🍴 Feedback by Meal Type</div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
-            {[
-              { label:'Breakfast', emoji:'🌅', bg:'#E3F2FD', color:'#1565C0' },
-              { label:'Lunch',     emoji:'☀️', bg:'#E8F5E9', color:'#2E7D32' },
-              { label:'Dinner',    emoji:'🌙', bg:'#EDE7F6', color:'#4527A0' },
-            ].map(m => {
-              const count = feedback.filter(r => r.meal_type === m.label).length;
-              const pct   = feedback.length ? Math.round(count/feedback.length*100) : 0;
-              return (
-                <div key={m.label} style={{ background:m.bg, borderRadius:12, padding:'18px 20px', textAlign:'center' }}>
-                  <div style={{ fontSize:36 }}>{m.emoji}</div>
-                  <div style={{ fontSize:16, fontWeight:800, color:m.color, marginTop:8 }}>{m.label}</div>
-                  <div style={{ fontSize:28, fontWeight:800, color:m.color, marginTop:4 }}>{count}</div>
-                  <div style={{ fontSize:12, color:m.color, opacity:0.7 }}>{pct}% of total</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* View All Records CTA */}
-        <div style={{ textAlign:'center', marginBottom:24 }}>
-          <button
-            onClick={() => navigate('/records')}
-            style={{ background:'#1565C0', color:'#fff', border:'none', padding:'12px 32px', borderRadius:10, fontWeight:700, fontSize:15, cursor:'pointer' }}>
-            📋 View All {feedback.length} Feedback Records →
-          </button>
-        </div>
-
       </div>
-    </div>
+
+      {/* ── Quick Insights ── */}
+      {summary && summary.total_count > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          {[
+            { title: '🏆 Best Category', ...(() => { const best = CATS.reduce((a, b) => (summary[a.key] || 0) > (summary[b.key] || 0) ? a : b); return { label: best.label, emoji: best.emoji, val: (summary[best.key] || 0).toFixed(1), color: '#059669' }; })() },
+            { title: '⚠️ Needs Attention', ...(() => { const worst = CATS.reduce((a, b) => (summary[a.key] || 0) < (summary[b.key] || 0) ? a : b); return { label: worst.label, emoji: worst.emoji, val: (summary[worst.key] || 0).toFixed(1), color: '#ef4444' }; })() },
+            { title: '📊 Satisfaction Rate', emoji: scoreFace(overall), label: `${(overall / 5 * 100).toFixed(0)}% positive`, val: overall.toFixed(1), color: scoreColor(overall) },
+          ].map((card, i) => (
+            <div key={i} style={{
+              background: '#fff',
+              borderRadius: 16,
+              padding: '22px 24px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 14 }}>{card.title}</div>
+              <div style={{ fontSize: 42 }}>{card.emoji}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginTop: 8 }}>{card.label}</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: card.color, marginTop: 4 }}>{card.val} ⭐</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Layout>
   );
 }

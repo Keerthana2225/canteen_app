@@ -1,7 +1,9 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-pyodbc
 python-dotenv
 openpyxl
 pandas
+qrcode[pil]
+pillow
+pyodbc

@@ -1,10 +1,11 @@
 """
 models.py — SQLAlchemy ORM models for Canteen and Feedback tables.
-These map 1-to-1 to the SQL Server schema in database\schema.sql.
+SQLite-compatible: uses String instead of Unicode (not needed for SQLite).
+Tables are auto-created on startup via Base.metadata.create_all().
 """
 
 from datetime import date, datetime
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Unicode
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -23,17 +24,17 @@ class Canteen(Base):
 class Feedback(Base):
     __tablename__ = "Feedback"
 
-    id             = Column(Integer,       primary_key=True, index=True)
-    canteen_id     = Column(Integer,       ForeignKey("Canteen.id"), nullable=True)
-    canteen_name   = Column(Unicode(100),  nullable=True)
-    meal_type      = Column(Unicode(20),   nullable=False)   # Breakfast/Lunch/Dinner
-    food_quality   = Column(Integer,       nullable=False)   # 1-5
-    food_taste     = Column(Integer,       nullable=False)   # 1-5
-    food_hygiene   = Column(Integer,       nullable=False)   # 1-5
-    staff_behavior = Column(Integer,       nullable=False)   # 1-5
-    cleanliness    = Column(Integer,       nullable=False)   # 1-5
-    comments       = Column(Unicode(500),  nullable=True)
-    feedback_date  = Column(Date,     default=date.today)      # hidden in UI
-    created_at     = Column(DateTime, default=datetime.utcnow) # hidden in UI
+    id             = Column(Integer,     primary_key=True, index=True)
+    canteen_id     = Column(Integer,     ForeignKey("Canteen.id"), nullable=True)
+    canteen_name   = Column(String(100), nullable=True)
+    meal_type      = Column(String(20),  nullable=False)   # Breakfast/Lunch/Dinner
+    food_quality   = Column(Integer,     nullable=False)   # 1-5
+    food_taste     = Column(Integer,     nullable=False)   # 1-5
+    food_hygiene   = Column(Integer,     nullable=False)   # 1-5
+    staff_behavior = Column(Integer,     nullable=False)   # 1-5
+    cleanliness    = Column(Integer,     nullable=False)   # 1-5
+    comments       = Column(String(500), nullable=True)
+    feedback_date  = Column(Date,     default=date.today)
+    created_at     = Column(DateTime, default=datetime.utcnow)
 
     canteen = relationship("Canteen", back_populates="feedbacks")
