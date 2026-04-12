@@ -41,7 +41,7 @@ export default function Layout({ children, title, subtitle, action }) {
             }}>🍽️</div>
             <div>
               <div style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 14, letterSpacing: '-0.3px' }}>
-                TSF Brakes India
+                TSF Brɑkes Indiɑ
               </div>
               <div style={{ color: '#60a5fa', fontSize: 11, fontWeight: 500, marginTop: 1 }}>
                 Canteen Dashboard

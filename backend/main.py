@@ -52,7 +52,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.on_event("startup")
 def startup_event():
     Base.metadata.create_all(bind=engine)
-    print("✅  SQL Server tables ready — CanteenFeedbackDB connected")
+    print("SQL Server tables ready - CanteenFeedbackDB connected")
     from database import SessionLocal
     import models
     db = SessionLocal()

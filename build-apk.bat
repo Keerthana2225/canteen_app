@@ -64,27 +64,18 @@ copy /Y "canteen-release.keystore" "android\app\canteen-release.keystore" >nul
 ) > "android\keystore.properties"
 
 :: Inject signing config into build.gradle
-powershell -Command ^
-    "$content = Get-Content 'android\app\build.gradle' -Raw;" ^
-    "$signingBlock = @'" ^
-    "def keystoreProps = new Properties()" ^
-    "def keystoreFile = rootProject.file('../keystore.properties')" ^
-    "if (keystoreFile.exists()) { keystoreFile.withInputStream { keystoreProps.load(it) } }" ^
-    "'@;" ^
-    "$releaseSigningConfig = @'" ^
-    "        release {" ^
-    "            storeFile file(keystoreProps['storeFile'])" ^
-    "            storePassword keystoreProps['storePassword']" ^
-    "            keyAlias keystoreProps['keyAlias']" ^
-    "            keyPassword keystoreProps['keyPassword']" ^
-    "        }" ^
-    "'@;" ^
-    "if ($content -notmatch 'storeFile') {" ^
-    "    $content = $content -replace 'android \{', \"$signingBlock`nandroid {\";" ^
-    "    $content = $content -replace 'debug \{', \"$releaseSigningConfig`n        debug {\";" ^
-    "    $content = $content -replace 'buildTypes \{', 'buildTypes {`n        release { signingConfig signingConfigs.release }';" ^
-    "    Set-Content 'android\app\build.gradle' $content" ^
-    "}"
+echo $content = Get-Content 'android\app\build.gradle' -Raw; > patch.ps1
+echo $signingBlock = "def keystoreProps = new Properties()`ndef keystoreFile = rootProject.file('../keystore.properties')`nif (keystoreFile.exists()) { keystoreFile.withInputStream { keystoreProps.load(it) } }" >> patch.ps1
+echo $releaseSigningConfig = "        release {`n            storeFile file(keystoreProps['storeFile'])`n            storePassword keystoreProps['storePassword']`n            keyAlias keystoreProps['keyAlias']`n            keyPassword keystoreProps['keyPassword']`n        }" >> patch.ps1
+echo if ($content -notmatch 'storeFile') { >> patch.ps1
+echo     $content = $content -replace 'android \{', "$signingBlock`nandroid {" >> patch.ps1
+echo     $content = $content.Replace("debug {", "$releaseSigningConfig`n        debug {") >> patch.ps1
+echo     $content = $content.Replace("buildTypes {", "buildTypes {`n        release { signingConfig signingConfigs.release }") >> patch.ps1
+echo     Set-Content 'android\app\build.gradle' $content >> patch.ps1
+echo } >> patch.ps1
+powershell -ExecutionPolicy Bypass -File patch.ps1
+del patch.ps1
+
 
 :: ── STEP 3: BUNDLE JS ──────────────────────────────────────
 echo.

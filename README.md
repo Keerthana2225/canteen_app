@@ -1,5 +1,5 @@
 # 🍽️ Canteen Feedback System
-### Brakes India Pvt Ltd — TSF Division
+### Brɑkes Indiɑ Pvt Ltd — TSF Division
 
 An industry-grade, fully anonymous canteen feedback system with a **React Native mobile app**, **React admin dashboard**, and a **FastAPI + SQL Server** backend.
 
@@ -272,4 +272,4 @@ If you need a debug build (connects to metro bundler for live reload):
 - Reverted custom non-standard 'a' font matching standard `Brakes India`.
 - Final release APK build deployed via automated scripts.
 
-*Built for Brakes India Pvt Ltd — TSF Division | 2026*
+*Built for Brɑkes Indiɑ Pvt Ltd — TSF Division | 2026*

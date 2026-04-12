@@ -116,7 +116,7 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
                 resizeMode="contain"
               />
             </View>
-            <Text style={ls.tsfBrand}>Brakes India</Text>
+            <Text style={ls.tsfBrand}>Brɑkes Indiɑ</Text>
             <Text style={ls.appName}>Canteen Feedback</Text>
           </View>
 
@@ -176,7 +176,7 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
             <Text style={ls.settingsBtnText}>⚙️  Configure Server IP</Text>
           </TouchableOpacity>
 
-          <Text style={ls.footer}>🔒 Secure internal system — Brakes India</Text>
+          <Text style={ls.footer}>🔒 Secure internal system — Brɑkes Indiɑ</Text>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -204,8 +204,7 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
                 onChangeText={setIpInput}
                 placeholder="e.g. 10.100.201.78"
                 placeholderTextColor="#A0AEC0"
-                keyboardType="default"
-                inputMode="url"
+                keyboardType="numeric"
                 autoCapitalize="none"
                 autoCorrect={false}
                 selectTextOnFocus={true}
@@ -245,8 +244,8 @@ const ls = StyleSheet.create({
     marginBottom: 8,
   },
   tsfLogoImg: { width: 66, height: 66 },
-  tsfBrand: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1 },
-  appName: { fontSize: 22, fontWeight: '600', color: '#90CAF9', letterSpacing: 0, textAlign: 'center', marginTop: -4 },
+  tsfBrand: { fontSize: 34, fontWeight: 'bold', fontFamily: 'sans-serif', color: '#FFFFFF', letterSpacing: -1 },
+  appName: { fontSize: 22, fontWeight: 'bold', fontFamily: 'sans-serif', color: '#90CAF9', letterSpacing: 0, textAlign: 'center', marginTop: -4 },
   card: {
     backgroundColor: '#FFFFFF', borderRadius: 24,
     padding: 28, gap: 16,
@@ -464,7 +463,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
       <View style={ad.header}>
         <View style={{ flex: 1 }}>
           <Text style={ad.headerTitle}>Feedback Admin</Text>
-          <Text style={ad.headerSub}>TSF Brakes India — Control Center</Text>
+          <Text style={ad.headerSub}>TSF Brɑkes Indiɑ — Control Center</Text>
         </View>
         <TouchableOpacity style={ad.refreshIconBtn} onPress={fetchData}>
           <Text style={{ fontSize: 18 }}>🔄</Text>

@@ -4,7 +4,7 @@ color 0A
 
 echo.
 echo  ============================================
-echo   TSF Brakes India — Canteen Feedback System
+echo   TSF Brɑkes Indiɑ — Canteen Feedback System
 echo   Offline Mode  ^|  SQLite  ^|  v2.0
 echo  ============================================
 echo.
