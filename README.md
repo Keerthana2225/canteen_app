@@ -3,12 +3,17 @@
 ## 1. Project Overview
 The **Smart Canteen Feedback Management System** is a comprehensive, digital solution designed to streamline the collection, analysis, and management of employee feedback regarding canteen facilities. This project replaces traditional paper-based feedback methods with an intuitive mobile kiosk application, paired with a powerful web-based administrative dashboard. 
 
-### Key Features
+### Exhaustive Feature List (Everything Included)
+We have packed this system with every feature necessary for a true industry-level production environment:
 *   **Intelligent Rating Validation**: A 1-to-5 star rating system across 5 key metrics. If any category receives a '1', the system mandates a written comment.
-*   **Critical Feedback Highlighting**: Automatically detects and flags feedback as "Critical" when the overall average rating is less than or equal to 2 (`overall_rating <= 2`), ensuring immediate administrative attention.
-*   **Auto Meal Detection**: Continuously checks the current system time to automatically assign feedback to the correct meal period (Breakfast, Lunch, Dinner, Midnight Supper, Early Morning Breakfast) with zero gaps.
-*   **Dashboard Analytics**: Visual representation of data through graphs and KPIs, providing day-wise, month-wise, and all-time reporting.
-*   **Multilingual Support**: The mobile interface supports both English and Tamil natively without requiring internet access for translation.
+*   **Critical Feedback Highlighting**: Automatically detects and flags feedback as "Critical" when the overall average rating is less than or equal to 2 (`overall_rating <= 2`).
+*   **Continuous Auto Meal Detection**: The system covers a 24-hour cycle by checking the tablet's local system clock. It automatically assigns the exact meal without manual user input (Breakfast: 6am-11am, Lunch: 11am-7pm, Dinner: 7pm-11pm, Midnight Supper: 11pm-1:30am, Early Morning: 1:30am-6am).
+*   **Web Dashboard Analytics**: Visual representation of data through Recharts graphs and KPIs, providing day-wise, month-wise, and all-time reporting.
+*   **Mobile Admin Dashboard**: A built-in, hidden admin screen right on the tablet kiosk. Designed in a "Premium Light Mode" with soft floating shadows, it allows local managers to check stats without needing a PC.
+*   **Native Excel Exports (.xlsx)**: Both the Web Dashboard and Mobile App can generate and download native Excel reports. The backend (using `openpyxl`) intelligently color-codes critical rows **red** directly inside the downloaded Excel file!
+*   **Dynamic Data Filtering**: Admins can filter reports by specific dates, specific months, or specific meal types to compare performance.
+*   **Multilingual Support**: The mobile interface supports both English and Tamil natively, using a local dictionary to ensure zero internet lag.
+*   **Network Resilience**: The mobile app is programmed to automatically detect if it is being tested in a web browser or running on the physical tablet, seamlessly switching its API routing to prevent freezing.
 
 ### Technology Stack Used
 *   **Frontend (Mobile App)**: React Native (Expo)
@@ -74,17 +79,9 @@ The system operates on a modern 3-tier architecture:
 ### Modules Description
 *   **Feedback Module**: The core interface where users provide 1-5 star ratings for Food Quality, Food Taste, Food Hygiene, Cleanliness, and Staff Behavior.
 *   **Validation Module**: Enforces strict data rules (e.g., forcing a user to type a comment if they select a 1-star rating).
-*   **Meal Detection Module**: A time-based algorithm that automatically assigns the correct meal tag based on the local device clock (e.g., 07:00-11:00 = Breakfast), ensuring no manual selection errors.
+*   **Meal Detection Module**: A time-based algorithm that automatically assigns the correct meal tag based on the local device clock.
 *   **Analytics Module**: Code on the server that does math on the database data (averages, counts, critical sums) so the dashboard can display it easily.
-*   **Reporting Module**: Allows the administrator to export data securely into an Excel format for official record-keeping.
-
-### Features Explanation
-*   **Rating System**: Uses a 1-5 scale across 5 granular categories to pinpoint exact areas of improvement.
-*   **Comment Validation**: If any user selects a rating of '1' for any category, the submit button locks until a written explanation is provided in the comments field.
-*   **Critical Feedback Logic**: The backend calculates the `overall_rating` (average of the 5 categories). If `overall_rating <= 2`, the database row is permanently flagged with `is_critical = 1`.
-*   **Continuous Auto-Detection**: Covers a 24-hour cycle (Breakfast, Lunch, Dinner, Midnight Supper, Early Morning Breakfast) ensuring there are no gap periods where feedback cannot be submitted.
-*   **Dashboard Highlights**: In the admin view, critical feedback records are highlighted in striking red hues to demand immediate attention.
-*   **Bilingual Accessibility**: A global toggle instantly translates the feedback UI between English and Tamil.
+*   **Reporting Module**: Allows the administrator to export data securely into a color-coded Excel format for official record-keeping.
 
 ### Database Design
 The core table structure (`Feedback`):
@@ -109,6 +106,7 @@ An **API (Application Programming Interface)** is simply a bridge that allows th
 *   **`GET /feedback/critical`** → Fetch all records flagged as `is_critical = 1`.
 *   **`GET /feedback/day-report`** → Get day-wise aggregated stats.
 *   **`GET /analytics/monthly`** → Get detailed analytics for the graphs.
+*   **`GET /feedback/export`** → Generates the formatted Excel file.
 
 ### How to Test APIs using Postman
 Here is exactly how to test the core feedback submission endpoint manually using Postman:
@@ -158,10 +156,12 @@ To provide a complete academic understanding, here is a breakdown of every speci
     *   *Why?* By automatically checking if a record is critical (`is_critical === 1`), the code dynamically injects a red CSS-like style directly into the screen. This ensures admins' eyes are instantly drawn to major problems without needing to click or search.
 *   **FastAPI**: Used for the backend server. 
     *   *Why?* It is an extremely fast Python framework that automatically validates data. This guarantees that bad or broken data (e.g., someone trying to submit a rating of 6 out of 5) is rejected before it can crash the database.
-*   **Uvicorn (ASGI Web Server)**: **ASGI** stands for *Asynchronous Server Gateway Interface*. It is a modern standard that allows a server to handle thousands of requests at the exact same time without freezing or waiting in line.
+*   **Uvicorn (ASGI Web Server)**: **ASGI** stands for *Asynchronous Server Gateway Interface*. It is a modern standard that allows a server to handle thousands of requests at the exact same time without freezing or making people wait in line.
     *   *Why?* FastAPI requires an ASGI server to run its asynchronous code, and Uvicorn is the lightning-fast engine that powers it.
 *   **SQLAlchemy (ORM)**: **ORM** stands for *Object-Relational Mapping*. It is a tool that automatically translates normal Python code into database commands (SQL).
     *   *Why?* It allows developers to interact with the database securely without writing raw SQL queries. This drastically reduces the risk of "SQL Injection" hacking attacks and allows the system to securely communicate with the enterprise MS SQL Server.
+*   **OpenPyXL**: A Python library used in the backend for Excel manipulation.
+    *   *Why?* It is used to generate the `.xlsx` exports. More importantly, we used it to inject formatting rules so that critical feedback rows are colored red directly inside the downloaded Excel file!
 *   **React.js**: A popular tool created by Facebook used for building the administrative web dashboard. Its component-based architecture makes it ideal for building complex, interactive websites.
 *   **Recharts**: A charting tool built specifically for React. 
     *   *Why?* Used specifically to generate the beautiful, interactive bar charts and line graphs on the admin dashboard, visually representing the raw analytics data.
