@@ -150,6 +150,8 @@ Here is exactly how to test the core feedback submission endpoint manually using
 To provide a complete academic understanding, here is a breakdown of every specific tool utilized in the system, with beginner-friendly explanations of what they mean and *why* they were chosen:
 
 *   **React Native (Expo)**: A framework used to build the mobile application. Expo provides a simplified workflow that allows developers to build a mobile app using web technologies (JavaScript) and seamlessly deploy it as a physical Android tablet kiosk app.
+*   **Native JavaScript Date API (Auto Meal Detection)**: The automatic meal detection algorithm does not rely on any heavy external time-tracking libraries. Instead, it uses the built-in JavaScript `Date` object (`new Date().getHours()`). 
+    *   *Why?* Native APIs run instantly directly on the tablet's processor. By using simple mathematical conversions (Hour × 60 + Minutes) natively, the app requires zero internet connection to figure out the time, ensuring 100% reliable offline scheduling.
 *   **Local State Translation Dictionary (Tamil Support)**: Instead of using an external internet service like Google Translate, the Tamil language feature uses a hardcoded dictionary embedded directly in the app's code. 
     *   *Why?* To guarantee that the application functions 100% offline, has zero loading lag when switching languages, and ensures we can use perfectly accurate, culturally specific canteen terminology rather than awkward robotic translations.
 *   **Dynamic UI Styling (Critical Highlights)**: The red glowing highlights for critical feedback are achieved using React Native's styling system. 
