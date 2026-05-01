@@ -5,23 +5,23 @@ The **Smart Canteen Feedback Management System** is a comprehensive, digital sol
 
 ### Key Features
 *   **Intelligent Rating Validation**: A 1-to-5 star rating system across 5 key metrics. If any category receives a '1', the system mandates a written comment.
-*   **Critical Feedback Highlighting**: Automatically detects and flags feedback as "Critical" when the overall average rating is less than 2 (`overall_rating < 2`), ensuring immediate administrative attention.
+*   **Critical Feedback Highlighting**: Automatically detects and flags feedback as "Critical" when the overall average rating is less than or equal to 2 (`overall_rating <= 2`), ensuring immediate administrative attention.
 *   **Auto Meal Detection**: Continuously checks the current system time to automatically assign feedback to the correct meal period (Breakfast, Lunch, Dinner, Midnight Supper, Early Morning Breakfast) with zero gaps.
 *   **Dashboard Analytics**: Visual representation of data through graphs and KPIs, providing day-wise, month-wise, and all-time reporting.
-*   **Multilingual Support**: The mobile interface supports both English and Tamil to maximize accessibility for all workers.
+*   **Multilingual Support**: The mobile interface supports both English and Tamil natively without requiring internet access for translation.
 
 ### Technology Stack Used
 *   **Frontend (Mobile App)**: React Native (Expo)
 *   **Frontend (Admin Web)**: React.js
 *   **Backend API**: FastAPI (Python)
-*   **Database**: SQLite / MS SQL Server (via SQLAlchemy)
+*   **Database**: MS SQL Server / SQLite (via SQLAlchemy ORM)
 
 ### Installation and Setup Instructions
 
 #### Backend (FastAPI)
 1. Navigate to the backend directory: `cd backend`
 2. Create a virtual environment: `python -m venv venv`
-3. Activate the virtual environment: `.\venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Mac/Linux)
+3. Activate the virtual environment: `.\venv\Scripts\activate` (Windows)
 4. Install dependencies: `pip install -r requirements.txt`
 5. Run the server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
 
@@ -49,7 +49,6 @@ canteen_app/
 ```
 
 ### Links
-*   **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs) (Available when backend is running)
 *   **GitHub Repository**: [https://github.com/Keerthana2225/canteen_app](https://github.com/Keerthana2225/canteen_app)
 
 ---
@@ -82,7 +81,7 @@ The system operates on a modern 3-tier architecture:
 ### Features Explanation
 *   **Rating System**: Uses a 1-5 scale across 5 granular categories to pinpoint exact areas of improvement.
 *   **Comment Validation**: If any user selects a rating of '1' for any category, the submit button locks until a written explanation is provided in the comments field.
-*   **Critical Feedback Logic**: The backend calculates the `overall_rating` (average of the 5 categories). If `overall_rating < 2`, the database row is permanently flagged with `is_critical = 1`.
+*   **Critical Feedback Logic**: The backend calculates the `overall_rating` (average of the 5 categories). If `overall_rating <= 2`, the database row is permanently flagged with `is_critical = 1`.
 *   **Continuous Auto-Detection**: Covers a 24-hour cycle (Breakfast, Lunch, Dinner, Midnight Supper, Early Morning Breakfast) ensuring there are no gap periods where feedback cannot be submitted.
 *   **Dashboard Highlights**: In the admin view, critical feedback records are highlighted in striking red hues to demand immediate attention.
 *   **Bilingual Accessibility**: A global toggle instantly translates the feedback UI between English and Tamil.
@@ -94,7 +93,7 @@ The core table structure (`Feedback`):
 *   `meal_type` (String: Breakfast, Lunch, etc.)
 *   `food_quality`, `food_taste`, `food_hygiene`, `staff_behavior`, `cleanliness` (Integer 1-5)
 *   `overall_rating` (Float, auto-calculated average)
-*   `is_critical` (Integer/Boolean, auto-flagged if overall < 2)
+*   `is_critical` (Integer/Boolean, auto-flagged if overall <= 2)
 *   `comments` (String, mandatory if any rating = 1)
 *   `feedback_date` (Date)
 *   `created_at` (Timestamp)
@@ -103,23 +102,36 @@ The core table structure (`Feedback`):
 
 ## 3. API Documentation Section
 
-The FastAPI backend automatically generates interactive Swagger documentation.
+The backend APIs handle data securely. Below are the key endpoints and how to test them using **Postman**.
 
 ### Core Endpoints:
-*   **`POST /feedback`** 
-    *   *Purpose*: Submit new user feedback.
-    *   *Logic*: Computes the `overall_rating` and sets the `is_critical` flag before saving to the database.
-*   **`GET /feedback/critical`**
-    *   *Purpose*: Retrieves all feedback entries where `is_critical = 1`.
-*   **`GET /feedback/day-report`**
-    *   *Purpose*: Provides aggregated day-wise feedback (total submissions, average scores, critical count) for a specific date range.
-*   **`GET /analytics/daily`**
-    *   *Purpose*: Provides daily analytics tailored for line charts and data visualization.
+*   **`POST /feedback`** → Submit new feedback.
+*   **`GET /feedback/critical`** → Fetch all records flagged as `is_critical = 1`.
+*   **`GET /feedback/day-report`** → Get day-wise aggregated stats.
+*   **`GET /analytics/monthly`** → Get detailed analytics for the graphs.
 
-### How to Access Swagger UI
-1. Ensure the backend server is running via Uvicorn.
-2. Open your web browser and navigate to: **[http://localhost:8000/docs](http://localhost:8000/docs)**
-3. From this interface, you can explore schemas, view expected JSON payloads, and test endpoints directly (similar to Postman).
+### How to Test APIs using Postman
+Since you only have Postman, here is exactly how to test the core feedback submission endpoint manually:
+
+1.  Open **Postman** and click **New Request**.
+2.  Change the request method dropdown from `GET` to **`POST`**.
+3.  In the URL bar, enter: `http://localhost:8000/feedback`
+4.  Go to the **Body** tab, select **raw**, and change the format dropdown from `Text` to **`JSON`**.
+5.  Paste the following test data into the box:
+    ```json
+    {
+      "canteen_name": "Main Canteen",
+      "canteen_id": 1,
+      "meal_type": "Lunch",
+      "food_quality": 2,
+      "food_taste": 2,
+      "food_hygiene": 2,
+      "staff_behavior": 2,
+      "cleanliness": 2,
+      "comments": "The food was completely cold."
+    }
+    ```
+6.  Click **Send**. You should receive a `201 Created` status with a success message. Because all scores are `2`, the backend will automatically set the `is_critical` flag to `1` in the database!
 
 ---
 
@@ -128,20 +140,33 @@ The FastAPI backend automatically generates interactive Swagger documentation.
 1.  **User Interaction**: An employee approaches the tablet kiosk running the React Native Mobile App.
 2.  **Meal Auto-Detection**: The app silently checks the system clock and assigns the `meal_type` parameter automatically (e.g., "Lunch").
 3.  **Input & Validation**: The user taps 1-5 stars for the categories. If they tap '1' star, the React Native state immediately enforces a mandatory written comment.
-4.  **Submission**: The app sends a `POST` request with a JSON payload to the FastAPI backend.
-5.  **Backend Processing**: FastAPI calculates `overall_rating = sum(ratings)/5`. It then evaluates: `if overall_rating < 2: is_critical = 1`.
+4.  **Submission**: The app sends a `POST` request with a JSON payload to the FastAPI backend using the JavaScript `fetch()` API.
+5.  **Backend Processing**: FastAPI calculates `overall_rating = sum(ratings)/5`. It then evaluates: `if overall_rating <= 2: is_critical = 1`.
 6.  **Database Storage**: The structured record is committed to the database via SQLAlchemy ORM.
-7.  **Admin Review**: An administrator logs into the React Dashboard. The dashboard makes `GET` requests to the `/analytics` endpoints and renders the new data points on the charts.
+7.  **Admin Review**: An administrator logs into the React Dashboard. The dashboard makes `GET` requests using Axios and renders the new data points on the Recharts graphs.
 
 ---
 
 ## 5. Tools and Technologies Used
 
+To provide a complete academic understanding, here is a breakdown of every specific tool and technique utilized in the system and *why* it was chosen:
+
 *   **React Native (Expo)**: Used for the mobile application. Expo provides a managed workflow that drastically speeds up development and allows the app to be seamlessly deployed as a physical Android tablet kiosk.
-*   **FastAPI**: Used for the backend server. Chosen for its extreme performance (thanks to Starlette and Pydantic), automatic validation, and out-of-the-box Swagger API documentation.
-*   **React.js**: Used for the administrative web dashboard. React's component-based architecture makes it ideal for building complex, reactive data visualization interfaces.
-*   **SQLite / MS SQL Server**: Used as the relational database. SQLite is lightweight and requires zero configuration (great for academic submissions), while the ORM allows an easy swap to MS SQL Server for corporate production environments.
-*   **Git and GitHub**: Used for version control, collaborative development, and source code backup.
+*   **Local State Translation Dictionary (Tamil Support)**: Instead of using an external API like Google Translate, the Tamil language feature uses a hardcoded JavaScript dictionary object (`TRANSLATIONS`) managed by React's `useState` hook. 
+    *   *Why?* To guarantee that the application functions 100% offline, has zero loading latency when switching languages, and ensures perfect, culturally accurate canteen terminology.
+*   **Dynamic UI Styling (Critical Highlights)**: The red glowing highlights for critical feedback are achieved using React Native's `StyleSheet` and conditional rendering. 
+    *   *Why?* By checking `if (record.is_critical === 1)`, the UI dynamically injects a specific CSS-like style (`backgroundColor: '#FEF2F2'`, `borderColor: '#DC2626'`) strictly on the client side, ensuring admins' eyes are drawn instantly to problems.
+*   **FastAPI**: Used for the backend server. 
+    *   *Why?* Chosen for its extreme execution speed and automatic data validation using Python's Pydantic models. It guarantees that bad data (e.g., a rating of 6 out of 5) cannot crash the database.
+*   **Uvicorn**: Used as the ASGI web server. 
+    *   *Why?* FastAPI is an asynchronous framework, and Uvicorn provides the lightning-fast asynchronous server required to run it.
+*   **SQLAlchemy (ORM)**: Object-Relational Mapping library used to talk to the database. 
+    *   *Why?* It allows developers to interact with the database using Python objects instead of writing raw SQL queries. This drastically reduces the risk of "SQL Injection" hacking attacks and makes it easy to switch from SQLite to MS SQL Server without rewriting code.
+*   **React.js**: Used for the administrative web dashboard. React's component-based architecture makes it ideal for building complex interfaces.
+*   **Recharts**: A charting library built for React. 
+    *   *Why?* Used specifically to generate the beautiful, interactive bar charts and line graphs on the admin dashboard, visually representing the JSON analytics data.
+*   **Axios**: A JavaScript HTTP client. 
+    *   *Why?* Used inside the React dashboard to fetch data from the FastAPI backend. It is simpler and handles JSON conversion more cleanly than the standard `fetch()` API.
 
 ---
 
