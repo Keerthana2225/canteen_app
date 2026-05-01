@@ -39,7 +39,15 @@ export default function Analytics() {
     setLoading(false);
   }, [mealFilter, fromDate, toDate]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); }, []); // Only fetch on mount, remove dependencies to avoid auto-fetch on state change
+
+  const handleApply = () => {
+    if (!fromDate || !toDate) {
+      alert("Please select both 'From Date' and 'To Date' to apply filters.");
+      return;
+    }
+    fetchData();
+  };
 
   const chartData = CATS.map(c => ({
     name:  c.label,
@@ -105,7 +113,7 @@ export default function Analytics() {
           />
         </div>
         <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
-          <button onClick={fetchData}
+          <button onClick={handleApply}
             style={{
               background: '#0f172a', color: '#fff', border: 'none',
               padding: '10px 24px', borderRadius: 10,
@@ -117,7 +125,7 @@ export default function Analytics() {
           >
             Apply Filters
           </button>
-          <button onClick={() => { setMealFilter(''); setFromDate(''); setToDate(''); }}
+          <button onClick={() => { setMealFilter(''); setFromDate(''); setToDate(''); setTimeout(fetchData, 0); }}
             style={{
               background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1',
               padding: '10px 24px', borderRadius: 10,

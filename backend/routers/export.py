@@ -39,17 +39,19 @@ LEFT_ALIGN    = Alignment(horizontal="left",   vertical="center")
 
 
 COLUMNS = [
-    ("ID",            "id",             10),
-    ("Canteen Name",  "canteen_name",   20),
-    ("Meal Type",     "meal_type",      14),
-    ("Food Quality",  "food_quality",   14),
-    ("Food Taste",    "food_taste",     12),
-    ("Food Hygiene",  "food_hygiene",   14),
-    ("Staff Behavior","staff_behavior", 16),
-    ("Cleanliness",   "cleanliness",    13),
-    ("Comments",      "comments",       40),
-    ("Feedback Date", "feedback_date",  16),
-    ("Submitted At",  "created_at",     22),
+    ("ID",             "id",             10),
+    ("Canteen Name",   "canteen_name",   20),
+    ("Meal Type",      "meal_type",      22),
+    ("Food Quality",   "food_quality",   14),
+    ("Food Taste",     "food_taste",     12),
+    ("Food Hygiene",   "food_hygiene",   14),
+    ("Staff Behavior", "staff_behavior", 16),
+    ("Cleanliness",    "cleanliness",    13),
+    ("Overall Rating", "overall_rating", 15),
+    ("Critical",       "is_critical",    10),
+    ("Comments",       "comments",       40),
+    ("Feedback Date",  "feedback_date",  16),
+    ("Submitted At",   "created_at",     22),
 ]
 
 # Rating label map for Excel cells
@@ -88,7 +90,7 @@ def export_feedback_excel(
     ws.title = "Canteen Feedback"
 
     # Title row
-    ws.merge_cells("A1:K1")
+    ws.merge_cells("A1:M1")
     title_cell = ws["A1"]
     title_cell.value     = f"Canteen Feedback Report — Exported {datetime.now().strftime('%d %b %Y, %I:%M %p')}"
     title_cell.font      = Font(bold=True, size=13, color="1F4E79")
@@ -105,20 +107,26 @@ def export_feedback_excel(
         ws.column_dimensions[cell.column_letter].width = width
     ws.row_dimensions[2].height = 22
 
+    CRITICAL_FILL = PatternFill("solid", fgColor="FFC7CE")
+
     # Data rows
     for row_idx, record in enumerate(records, start=3):
         is_alt = (row_idx % 2 == 0)
         fill   = ALT_FILL if is_alt else PatternFill()
+        if record.is_critical == 1:
+            fill = CRITICAL_FILL
 
         values = [
             record.id,
             record.canteen_name or "Main Canteen",
-            record.meal_type,   # plain text: Breakfast / Lunch / Dinner
+            record.meal_type,
             RATING_LABEL.get(record.food_quality,   str(record.food_quality)),
             RATING_LABEL.get(record.food_taste,     str(record.food_taste)),
             RATING_LABEL.get(record.food_hygiene,   str(record.food_hygiene)),
             RATING_LABEL.get(record.staff_behavior, str(record.staff_behavior)),
             RATING_LABEL.get(record.cleanliness,    str(record.cleanliness)),
+            round(float(record.overall_rating), 2) if record.overall_rating is not None else "",
+            "Yes" if record.is_critical == 1 else "No",
             (record.comments or "").encode('ascii', 'replace').decode('ascii')
                 if record.comments else "",
             record.feedback_date.strftime("%d-%m-%Y")    if record.feedback_date else "",
@@ -136,7 +144,7 @@ def export_feedback_excel(
     ws.freeze_panes = "A3"
 
     # Auto-filter
-    ws.auto_filter.ref = f"A2:K{max(2, len(records) + 2)}"
+    ws.auto_filter.ref = f"A2:M{max(2, len(records) + 2)}"
 
     # Summary sheet
     ws2 = wb.create_sheet("Summary")

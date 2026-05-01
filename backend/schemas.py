@@ -1,5 +1,11 @@
 """
 schemas.py — Pydantic schemas for request validation and response serialization.
+
+Key rules:
+  - meal_type: one of 5 allowed values (auto-detected by mobile app)
+  - If ANY individual rating = 1 → comments is mandatory
+  - overall_rating is computed server-side (not submitted by client)
+  - is_critical = 1 when overall_rating < 2
 """
 
 import re
@@ -20,13 +26,22 @@ def strip_emojis(text: str) -> str:
     return re.sub(r'[\U00010000-\U0010FFFF]', '', text)
 
 
+ALLOWED_MEAL_TYPES = {
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Midnight Supper",
+    "Early Morning Breakfast",
+}
+
+
 # ─────────────────────────────────────────────
 # Request schema — submitted from mobile app
 # ─────────────────────────────────────────────
 class FeedbackCreate(BaseModel):
     canteen_name:   Optional[str] = "Main Canteen"
     canteen_id:     Optional[int] = 1
-    meal_type:      str           = Field(..., description="Breakfast | Lunch | Dinner")
+    meal_type:      str           = Field(..., description="Breakfast | Lunch | Dinner | Midnight Supper | Early Morning Breakfast")
     food_quality:   int           = Field(..., ge=1, le=5)
     food_taste:     int           = Field(..., ge=1, le=5)
     food_hygiene:   int           = Field(..., ge=1, le=5)
@@ -36,9 +51,8 @@ class FeedbackCreate(BaseModel):
 
     @validator("meal_type")
     def validate_meal_type(cls, v):
-        allowed = {"Breakfast", "Lunch", "Dinner"}
-        if v not in allowed:
-            raise ValueError(f"meal_type must be one of {allowed}")
+        if v not in ALLOWED_MEAL_TYPES:
+            raise ValueError(f"meal_type must be one of {ALLOWED_MEAL_TYPES}")
         return v
 
     @validator("comments")
@@ -53,10 +67,22 @@ class FeedbackCreate(BaseModel):
     def clean_canteen_name(cls, v):
         return strip_emojis(v) if v else v
 
+    @validator("comments", always=True)
+    def comment_required_for_low_ratings(cls, v, values):
+        """
+        If ANY individual rating equals 1, a comment is mandatory.
+        This is enforced both client-side (mobile app) and server-side here.
+        """
+        rating_fields = ["food_quality", "food_taste", "food_hygiene", "staff_behavior", "cleanliness"]
+        any_low_rating = any(values.get(f, 5) <= 2 for f in rating_fields)
+        if any_low_rating and not v:
+            raise ValueError("A comment is required when any rating is 1 or 2 (Poor/Below Average).")
+        return v
+
 
 # ─────────────────────────────────────────────
 # Response schema — returned to admin/export
-# Includes feedback_date and created_at
+# Includes all fields including dates, overall_rating, is_critical
 # ─────────────────────────────────────────────
 class FeedbackResponse(BaseModel):
     id:             int
@@ -68,6 +94,8 @@ class FeedbackResponse(BaseModel):
     food_hygiene:   int
     staff_behavior: int
     cleanliness:    int
+    overall_rating: Optional[float]
+    is_critical:    Optional[int]
     comments:       Optional[str]
     feedback_date:  Optional[date]
     created_at:     Optional[datetime]
@@ -77,7 +105,8 @@ class FeedbackResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────
-# Public list schema — hides date fields from web UI
+# Public list schema — for dashboard/records API
+# Exposes dates for day-wise reporting
 # ─────────────────────────────────────────────
 class FeedbackPublic(BaseModel):
     id:             int
@@ -88,7 +117,11 @@ class FeedbackPublic(BaseModel):
     food_hygiene:   int
     staff_behavior: int
     cleanliness:    int
+    overall_rating: Optional[float]
+    is_critical:    Optional[int]
     comments:       Optional[str]
+    feedback_date:  Optional[date]
+    created_at:     Optional[datetime]
 
     class Config:
         from_attributes = True
@@ -103,9 +136,26 @@ class SummaryResponse(BaseModel):
     avg_food_hygiene:   float
     avg_staff_behavior: float
     avg_cleanliness:    float
+    avg_overall:        float
     total_count:        int
+    critical_count:     int
     meal_type_filter:   Optional[str] = None
     canteen_filter:     Optional[str] = None
+
+
+# ─────────────────────────────────────────────
+# Critical feedback schema
+# ─────────────────────────────────────────────
+class CriticalFeedback(BaseModel):
+    id:             int
+    meal_type:      str
+    overall_rating: Optional[float]
+    comments:       Optional[str]
+    feedback_date:  Optional[date]
+    created_at:     Optional[datetime]
+
+    class Config:
+        from_attributes = True
 
 
 # ─────────────────────────────────────────────

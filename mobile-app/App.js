@@ -23,17 +23,107 @@ const USERS = {
 };
 
 const MEAL_TYPES = [
-  { label: 'Breakfast', emoji: '🌅' },
-  { label: 'Lunch', emoji: '☀️' },
-  { label: 'Dinner', emoji: '🌙' },
+  { label: 'Breakfast',              emoji: '🌅', color: '#1565C0' },
+  { label: 'Lunch',                  emoji: '☀️', color: '#2E7D32' },
+  { label: 'Dinner',                 emoji: '🌙', color: '#6A1B9A' },
+  { label: 'Midnight Supper',        emoji: '🌃', color: '#1A237E' },
+  { label: 'Early Morning Breakfast',emoji: '🌄', color: '#E65100' },
 ];
 
+function detectMealType() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const mins = h * 60 + m;
+  // 6:00–10:59 → Breakfast
+  if (mins >= 360 && mins <= 659)  return MEAL_TYPES[0];
+  // 11:00–14:59 → Lunch
+  if (mins >= 660 && mins <= 899)  return MEAL_TYPES[1];
+  // 15:00–18:59 → Lunch (afternoon)
+  if (mins >= 900 && mins <= 1139) return MEAL_TYPES[1];
+  // 19:00–22:59 → Dinner
+  if (mins >= 1140 && mins <= 1379) return MEAL_TYPES[2];
+  // 23:00–01:30 → Midnight Supper (1380–1439 and 0–90)
+  if (mins >= 1380 || mins <= 90)  return MEAL_TYPES[3];
+  // 01:31–05:59 → Early Morning Breakfast
+  return MEAL_TYPES[4];
+}
+
+const TRANSLATIONS = {
+  en: {
+    headerTitle:    'Canteen Feedback',
+    headerSub:      'Help us serve you better',
+    mealDetected:   'Meal Auto-Detected',
+    rateExperience: '⭐  Rate Your Experience',
+    tapStars:       'Tap stars — watch the emoji react!',
+    addComments:    '💬  Additional Comments',
+    commentRequired:'Comment is required when any rating is 1 or 2',
+    commentHint:    'Tell us what went wrong... (Required)',
+    commentOptional:'Any additional comments? (Optional)',
+    submit:         '✅  Submit Feedback',
+    submitting:     '⏳  Submitting...',
+    successTitle:   'Thank You!',
+    successSub:     'Your feedback has been\nsubmitted anonymously.',
+    anonNote:       '🔒 No personal data collected',
+    resetNote:      'Form resets in a few seconds...',
+    footer:         '🔒 Your feedback is 100% anonymous and helps\nimprove our canteen services every day.',
+    missingRatings: 'Missing Ratings',
+    pleaseRate:     'Please rate all categories before submitting.',
+    commentNeeded:  'Comment Required',
+    commentNeededMsg:'Please add a comment explaining the low rating (≤ 2).',
+    connErr:        'Connection Error',
+    connErrMsg:     'Backend not reachable.',
+    logout:         'Logout',
+    back:           '← Back',
+    lowFeedback:    '⚠️ Low Feedback',
+    criticalAlert:  '🔴 Critical — comment required',
+    food_quality:   'Food Quality',
+    food_taste:     'Food Taste',
+    food_hygiene:   'Food Hygiene',
+    cleanliness:    'Cleanliness',
+    staff_behavior: 'Staff Behavior',
+  },
+  ta: {
+    headerTitle:    'கேன்டீன் கருத்து',
+    headerSub:      'சிறந்த சேவைக்கு உதவுங்கள்',
+    mealDetected:   'உணவு வகை தானாக கண்டறியப்பட்டது',
+    rateExperience: '⭐  உங்கள் அனுபவத்தை மதிப்பிடுங்கள்',
+    tapStars:       'நட்சத்திரங்களை தொடுங்கள்!',
+    addComments:    '💬  கூடுதல் கருத்துகள்',
+    commentRequired:'மதிப்பெண் 1 அல்லது 2 ஆக இருந்தால் கருத்து கட்டாயம்',
+    commentHint:    'என்ன தவறு நடந்தது? (கட்டாயம்)',
+    commentOptional:'கூடுதல் கருத்துகள்? (விருப்பம்)',
+    submit:         '✅  கருத்தை சமர்ப்பி',
+    submitting:     '⏳  சமர்ப்பிக்கிறது...',
+    successTitle:   'நன்றி!',
+    successSub:     'உங்கள் கருத்து அநாமதேயமாக சமர்ப்பிக்கப்பட்டது.',
+    anonNote:       '🔒 தனிப்பட்ட தரவு சேகரிக்கப்படவில்லை',
+    resetNote:      'சில நொடிகளில் படிவம் மீட்டமைக்கப்படும்...',
+    footer:         '🔒 உங்கள் கருத்து 100% அநாமதேயமானது.',
+    missingRatings: 'மதிப்பீடு தேவை',
+    pleaseRate:     'அனைத்து பிரிவுகளையும் மதிப்பிடுங்கள்.',
+    commentNeeded:  'கருத்து தேவை',
+    commentNeededMsg:'குறைந்த மதிப்பெண்ணுக்கான (≤ 2) காரணம் தெரிவிக்கவும்.',
+    connErr:        'இணைப்பு பிழை',
+    connErrMsg:     'சர்வர் கிடைக்கவில்லை.',
+    logout:         'வெளியேறு',
+    back:           '← பின்',
+    lowFeedback:    '⚠️ குறைந்த கருத்து',
+    criticalAlert:  '🔴 மிகவும் குறைவு — கருத்து கட்டாயம்',
+    food_quality:   'உணவின் தரம்',
+    food_taste:     'உணவின் சுவை',
+    food_hygiene:   'உணவு சுகாதாரம்',
+    cleanliness:    'தூய்மை',
+    staff_behavior: 'ஊழியர்களின் நடத்தை',
+  },
+};
+
 const RATING_FIELDS = [
-  { key: 'food_quality', label: 'Food Quality', emoji: '🍱' },
-  { key: 'food_taste', label: 'Food Taste', emoji: '😋' },
-  { key: 'food_hygiene', label: 'Food Hygiene', emoji: '🧼' },
-  { key: 'cleanliness', label: 'Cleanliness', emoji: '✨' },
-  { key: 'staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳' },
+  { key: 'food_quality', emoji: '🍱' },
+  { key: 'food_taste', emoji: '😋' },
+  { key: 'food_hygiene', emoji: '🧼' },
+  { key: 'cleanliness', emoji: '✨' },
+  { key: 'staff_behavior', emoji: '👨‍🍳' },
 ];
 
 const MOOD = {
@@ -204,7 +294,7 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
                 onChangeText={setIpInput}
                 placeholder="e.g. 10.100.201.78"
                 placeholderTextColor="#A0AEC0"
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 autoCapitalize="none"
                 autoCorrect={false}
                 selectTextOnFocus={true}
@@ -347,13 +437,15 @@ function AdminDashboard({ apiUrl, onLogout }) {
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [tab, setTab] = useState('summary');
+  const [tab, setTab] = useState('summary'); // 'summary' or 'records'
+  const [filterMode, setFilterMode] = useState('today'); // 'today' or 'all'
+  
   const [monthlyData, setMonthlyData] = useState(null);
   const [selMonth, setSelMonth] = useState(new Date().getMonth() + 1);
   const [selYear]  = useState(new Date().getFullYear());
   const [loadingM, setLoadingM] = useState(false);
-  const [kioskMode, setKioskMode] = useState(false);
   const [filterMeal, setFilterMeal] = useState('All');
+  const [showExportOptions, setShowExportOptions] = useState(false);
 
   const CATS = [
     { key: 'avg_food_quality',   fbKey: 'food_quality',   label: 'Food Quality',   emoji: '🍱', color: '#1565C0' },
@@ -367,16 +459,22 @@ function AdminDashboard({ apiUrl, onLogout }) {
     Breakfast: { bg: '#EBF8FF', color: '#1565C0', border: '#BEE3F8', emoji: '🌅' },
     Lunch:     { bg: '#F0FFF4', color: '#276749', border: '#9AE6B4', emoji: '☀️' },
     Dinner:    { bg: '#FAF5FF', color: '#553C9A', border: '#D6BCFA', emoji: '🌙' },
+    'Midnight Supper': { bg: '#E8EAF6', color: '#1A237E', border: '#C5CAE9', emoji: '🌃' },
+    'Early Morning Breakfast': { bg: '#FFF3E0', color: '#E65100', border: '#FFE0B2', emoji: '🌄' },
   };
-
+  const MEAL_ARR = ['Breakfast', 'Lunch', 'Dinner', 'Midnight Supper', 'Early Morning Breakfast'];
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      const d = new Date();
+      const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const q = filterMode === 'today' ? `?from_date=${todayStr}&to_date=${todayStr}` : '?limit=200';
+      
       const [s, f] = await Promise.all([
         fetch(`${apiUrl}/feedback/summary`).then(r => r.json()),
-        fetch(`${apiUrl}/feedback/all?limit=200`).then(r => r.json()),
+        fetch(`${apiUrl}/feedback/all${q}`).then(r => r.json()),
       ]);
       setSummary(s);
       setFeedback(Array.isArray(f) ? f : []);
@@ -384,12 +482,25 @@ function AdminDashboard({ apiUrl, onLogout }) {
       Alert.alert('❌ Error', 'Cannot reach server.\n' + apiUrl);
     }
     setLoading(false);
+  }, [apiUrl, filterMode]);
+
+  const fetchMonthly = useCallback(async (m, y) => {
+    setLoadingM(true);
+    try {
+      const r = await fetch(`${apiUrl}/analytics/monthly?year=${y}&month=${m}`);
+      setMonthlyData(await r.json());
+    } catch (_) { Alert.alert('Error', 'Cannot load analytics'); }
+    setLoadingM(false);
   }, [apiUrl]);
 
-  const handleExport = useCallback(async () => {
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchMonthly(selMonth, selYear); }, [fetchMonthly, selMonth, selYear]);
+
+  const handleExport = useCallback(async (urlParams = '') => {
     setExporting(true);
+    setShowExportOptions(false);
     try {
-      const url = `${apiUrl}/feedback/export`;
+      const url = `${apiUrl}/feedback/export${urlParams ? '?' + urlParams : ''}`;
       const filename = `canteen_feedback_${new Date().toISOString().slice(0, 10)}.xlsx`;
       const fileUri = FileSystem.documentDirectory + filename;
       const downloadResult = await FileSystem.downloadAsync(url, fileUri);
@@ -419,18 +530,6 @@ function AdminDashboard({ apiUrl, onLogout }) {
     setExporting(false);
   }, [apiUrl]);
 
-  const fetchMonthly = useCallback(async (m, y) => {
-    setLoadingM(true);
-    try {
-      const r = await fetch(`${apiUrl}/analytics/monthly?year=${y}&month=${m}`);
-      setMonthlyData(await r.json());
-    } catch (_) { Alert.alert('Error', 'Cannot load analytics'); }
-    setLoadingM(false);
-  }, [apiUrl]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-  useEffect(() => { fetchMonthly(selMonth, selYear); }, [fetchMonthly, selMonth, selYear]);
-
   const overall = summary
     ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length
     : 0;
@@ -444,31 +543,31 @@ function AdminDashboard({ apiUrl, onLogout }) {
   // Records filtered by meal
   const filteredFeedback = filterMeal === 'All'
     ? feedback
+    : filterMeal === 'Critical'
+    ? feedback.filter(f => f.is_critical === 1)
     : feedback.filter(f => f.meal_type === filterMeal);
 
   // Meal-type breakdown counts
-  const mealCounts = ['Breakfast', 'Lunch', 'Dinner'].map(m => ({
+  const mealCounts = MEAL_ARR.map(m => ({
     meal: m,
     count: feedback.filter(f => f.meal_type === m).length,
-  }));
+  })).filter(m => m.count > 0);
   const totalCount = feedback.length || 1;
-
-  if (kioskMode) return <FeedbackForm apiUrl={apiUrl} onBack={() => setKioskMode(false)} />;
 
   return (
     <SafeAreaView style={ad.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* ── Header ── */}
       <View style={ad.header}>
         <View style={{ flex: 1 }}>
-          <Text style={ad.headerTitle}>Feedback Admin</Text>
-          <Text style={ad.headerSub}>TSF Brɑkes Indiɑ — Control Center</Text>
+          <Text style={ad.headerTitle}>Admin Center</Text>
+          <Text style={ad.headerSub}>Live Feedback Monitoring</Text>
         </View>
         <TouchableOpacity style={ad.refreshIconBtn} onPress={fetchData}>
-          <Text style={{ fontSize: 18 }}>🔄</Text>
+          <Text style={{ fontSize: 20 }}>🔄</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={ad.exportBtn} onPress={handleExport} disabled={exporting} activeOpacity={0.85}>
+        <TouchableOpacity style={ad.exportBtn} onPress={() => setShowExportOptions(true)} disabled={exporting}>
           <Text style={ad.exportText}>{exporting ? '⏳' : '📥 Excel'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={ad.logoutBtn} onPress={onLogout}>
@@ -480,8 +579,8 @@ function AdminDashboard({ apiUrl, onLogout }) {
       <View style={ad.tabsScroll}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ad.tabs}>
           {[
-            { id: 'summary', label: '📊  Summary' },
-            { id: 'records', label: `📋  Records (${feedback.length})` },
+            { id: 'summary', label: '📊 Summary & Analytics' },
+            { id: 'records', label: `📋 Feedback Records` },
           ].map(t => (
             <TouchableOpacity
               key={t.id}
@@ -496,8 +595,8 @@ function AdminDashboard({ apiUrl, onLogout }) {
 
       {loading ? (
         <View style={ad.center}>
-          <ActivityIndicator size="large" color="#1565C0" />
-          <Text style={{ color: '#5C85C9', marginTop: 12, fontWeight: '600' }}>Loading dashboard...</Text>
+          <ActivityIndicator size="large" color="#0A0A0A" />
+          <Text style={{ color: '#475569', marginTop: 12, fontWeight: '600' }}>Loading dashboard...</Text>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }} showsVerticalScrollIndicator={false}>
@@ -508,7 +607,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
               {/* KPI Hero Card */}
               <View style={ad.heroCard}>
                 <View style={ad.heroLeft}>
-                  <Text style={ad.heroLabel}>Total Responses</Text>
+                  <Text style={ad.heroLabel}>All-Time Responses</Text>
                   <Text style={ad.heroCount}>{summary?.total_count ?? 0}</Text>
                   <View style={[ad.healthBadge, { backgroundColor: healthLabel.bg, borderColor: healthLabel.border }]}>
                     <Text style={[ad.healthBadgeText, { color: healthLabel.color }]}>● {healthLabel.text}</Text>
@@ -521,42 +620,6 @@ function AdminDashboard({ apiUrl, onLogout }) {
                   <Text style={ad.heroScore}>{overall.toFixed(2)}</Text>
                   <Text style={ad.heroScoreSub}>Avg Score / 5</Text>
                 </View>
-              </View>
-
-              {/* Meal Type Distribution */}
-              <View style={ad.sectionCard}>
-                <Text style={ad.sectionCardTitle}>🍽️  Meal Distribution</Text>
-                {mealCounts.map(({ meal, count }) => {
-                  const mc = MEAL_COLORS[meal];
-                  const pct = Math.round((count / totalCount) * 100);
-                  return (
-                    <View key={meal} style={{ marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 15 }}>{mc.emoji}</Text>
-                          <Text style={{ fontSize: 13, fontWeight: '700', color: '#2D3748' }}>{meal}</Text>
-                        </View>
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: mc.color }}>{count} ({pct}%)</Text>
-                      </View>
-                      <View style={{ height: 8, backgroundColor: '#EDF2F7', borderRadius: 8, overflow: 'hidden' }}>
-                        <View style={{ height: 8, width: `${pct}%`, backgroundColor: mc.color, borderRadius: 8 }} />
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-
-              {/* All-time Rating Bars */}
-              <View style={ad.sectionCard}>
-                <Text style={ad.sectionCardTitle}>⭐  Overall Rating Breakdown</Text>
-                {CATS.map(c => (
-                  <StatBar
-                    key={c.key}
-                    label={c.label} emoji={c.emoji}
-                    value={summary?.[c.key] || 0}
-                    color={c.color}
-                  />
-                ))}
               </View>
 
               {/* Monthly Analytics Section */}
@@ -576,7 +639,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
               </ScrollView>
 
               {loadingM ? (
-                <ActivityIndicator size="large" color="#1565C0" style={{ marginTop: 20 }} />
+                <ActivityIndicator size="large" color="#0A0A0A" style={{ marginTop: 20 }} />
               ) : monthlyData ? (
                 <>
                   {monthlyData.total_count > 0 ? (
@@ -622,7 +685,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
 
                       {/* ── Rating Breakdown ── */}
                       <View style={ad.sectionCard}>
-                        <Text style={ad.sectionCardTitle}>📊  {MONTHS[selMonth - 1]} Ratings</Text>
+                        <Text style={ad.sectionCardTitle}>📊  {MONTHS[selMonth - 1]} Ratings Breakdown</Text>
                         {CATS.map(c => (
                           <StatBar
                             key={c.key}
@@ -635,10 +698,10 @@ function AdminDashboard({ apiUrl, onLogout }) {
 
                       {/* ── Meal Type Split ── */}
                       <View style={ad.sectionCard}>
-                        <Text style={ad.sectionCardTitle}>🍽️  Meal Type Split</Text>
-                        {['Breakfast', 'Lunch', 'Dinner'].map(m => {
+                        <Text style={ad.sectionCardTitle}>🍽️  {MONTHS[selMonth - 1]} Meal Distribution</Text>
+                        {MEAL_ARR.map(m => {
                           const mc = MEAL_COLORS[m];
-                          const mCount = monthlyData[`${m.toLowerCase()}_count`] || 0;
+                          const mCount = monthlyData[`${m.toLowerCase().replace(/ /g, '_')}_count`] || 0;
                           const mPct = Math.round((mCount / (monthlyData.total_count || 1)) * 100);
                           return (
                             <View key={m} style={{ marginBottom: 14 }}>
@@ -679,21 +742,36 @@ function AdminDashboard({ apiUrl, onLogout }) {
           {/* ═══════════════════════════════════════════ RECORDS TAB ══ */}
           {tab === 'records' && (
             <>
+              {/* Mode Toggle */}
+              <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 4, flexDirection: 'row', borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 8 }}>
+                <TouchableOpacity style={[ad.toggleBtn, filterMode === 'today' && ad.toggleBtnOn]} onPress={() => setFilterMode('today')}>
+                  <Text style={[ad.toggleText, filterMode === 'today' && ad.toggleTextOn]}>Today's Records</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[ad.toggleBtn, filterMode === 'all' && ad.toggleBtnOn]} onPress={() => setFilterMode('all')}>
+                  <Text style={[ad.toggleText, filterMode === 'all' && ad.toggleTextOn]}>All Records</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Filter bar */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {['All', 'Breakfast', 'Lunch', 'Dinner'].map(m => (
+                  {['All', 'Critical', ...MEAL_ARR].map(m => (
                     <TouchableOpacity
                       key={m}
                       style={[
                         ad.filterChip,
                         filterMeal === m && ad.filterChipOn,
-                        m !== 'All' && filterMeal === m && { backgroundColor: MEAL_COLORS[m]?.color, borderColor: MEAL_COLORS[m]?.color },
+                        m === 'Critical' && filterMeal === m && { backgroundColor: '#FEE2E2', borderColor: '#EF4444' },
+                        m !== 'All' && m !== 'Critical' && filterMeal === m && { backgroundColor: MEAL_COLORS[m]?.color, borderColor: MEAL_COLORS[m]?.color },
                       ]}
                       onPress={() => setFilterMeal(m)}
                     >
-                      <Text style={[ad.filterChipText, filterMeal === m && ad.filterChipTextOn]}>
-                        {m === 'All' ? '🗂️  All' : `${MEAL_COLORS[m].emoji}  ${m}`}
+                      <Text style={[
+                        ad.filterChipText, 
+                        filterMeal === m && ad.filterChipTextOn,
+                        m === 'Critical' && filterMeal === m && { color: '#B91C1C' }
+                      ]}>
+                        {m === 'All' ? '🗂️  All' : m === 'Critical' ? '🔴 Critical' : `${MEAL_COLORS[m].emoji}  ${m}`}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -703,60 +781,38 @@ function AdminDashboard({ apiUrl, onLogout }) {
               {filteredFeedback.length === 0 ? (
                 <View style={ad.emptyBox}>
                   <Text style={{ fontSize: 48, marginBottom: 10 }}>📭</Text>
-                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#4A5568' }}>No Records Found</Text>
-                  <Text style={{ fontSize: 13, color: '#A0AEC0', marginTop: 6, textAlign: 'center' }}>
-                    {filterMeal === 'All' ? 'No feedback has been submitted yet.' : `No ${filterMeal} feedback submitted yet.`}
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#0F172A' }}>No Records Found</Text>
+                  <Text style={{ fontSize: 13, color: '#64748b', marginTop: 6, textAlign: 'center' }}>
+                    {filterMeal === 'All' 
+                      ? `No feedback submitted ${filterMode === 'today' ? 'today' : 'yet'}.` 
+                      : `No ${filterMeal} feedback submitted ${filterMode === 'today' ? 'today' : 'yet'}.`}
                   </Text>
                 </View>
               ) : (
                 filteredFeedback.map((item, idx) => {
-                  const mc = MEAL_COLORS[item.meal_type] || { bg: '#F7FAFC', color: '#4A5568', border: '#E2E8F0', emoji: '🍽️' };
+                  const mc = MEAL_COLORS[item.meal_type] || { bg: '#F1F5F9', color: '#475569', border: '#E2E8F0', emoji: '🍽️' };
                   const avg = ([
                     item.food_quality, item.food_taste, item.food_hygiene,
                     item.staff_behavior, item.cleanliness,
                   ].reduce((a, b) => a + b, 0) / 5);
-                  const avgMood = avg >= 4.5 ? '🤩' : avg >= 4 ? '😊' : avg >= 3 ? '😐' : avg >= 2 ? '😕' : '😢';
                   return (
-                    <View key={item.id ?? idx} style={ad.recordCard}>
-                      {/* Card Header */}
+                    <View key={item.id ?? idx} style={[ad.recordCard, item.is_critical === 1 && { borderColor: '#FECACA', borderWidth: 2, backgroundColor: '#FEF2F2' }]}>
                       <View style={ad.recordHeader}>
-                        <View style={[ad.mealPill, { backgroundColor: mc.bg, borderColor: mc.border }]}>
-                          <Text style={{ fontSize: 13 }}>{mc.emoji}</Text>
-                          <Text style={[ad.mealPillText, { color: mc.color }]}>{item.meal_type}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ fontSize: 24 }}>{mc.emoji}</Text>
+                          <View>
+                            <Text style={[ad.mealPillText, { color: mc.color }]}>{item.meal_type}</Text>
+                            <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '500' }}>{item.feedback_date || 'Date N/A'}</Text>
+                          </View>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                            <Text style={{ fontSize: 20 }}>{avgMood}</Text>
-                            <Text style={[ad.recordScore, { color: avg >= 4 ? '#276749' : avg >= 3 ? '#744210' : '#9B2C2C' }]}>
-                              {avg.toFixed(1)}
-                            </Text>
-                            <Text style={{ fontSize: 12, color: '#A0AEC0', fontWeight: '600' }}>/5</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                            <Text style={{ fontSize: 14, color: avg >= 4 ? '#10b981' : avg >= 3 ? '#f59e0b' : '#ef4444' }}>★</Text>
+                            <Text style={[ad.recordScore, { color: avg >= 4 ? '#10b981' : avg >= 3 ? '#b45309' : '#b91c1c' }]}>{avg.toFixed(1)}</Text>
                           </View>
-                          <Text style={{ fontSize: 11, color: '#A0AEC0' }}>#{item.id}</Text>
+                          {item.is_critical === 1 && <Text style={{ fontSize: 10, color: '#ef4444', fontWeight: '800' }}>CRITICAL</Text>}
                         </View>
                       </View>
-
-                      {/* Divider */}
-                      <View style={{ height: 1, backgroundColor: '#EDF2F7' }} />
-
-                      {/* Rating rows */}
-                      {CATS.map(c => {
-                        const val = item[c.fbKey] || 0;
-                        return (
-                          <View key={c.key} style={ad.ratingRow}>
-                            <Text style={{ fontSize: 14 }}>{c.emoji}</Text>
-                            <Text style={ad.ratingLabel}>{c.label}</Text>
-                            <View style={{ flexDirection: 'row', gap: 2, marginLeft: 'auto' }}>
-                              {[1,2,3,4,5].map(s => (
-                                <Text key={s} style={{ fontSize: 14, color: s <= val ? '#FFD700' : '#CBD5E0' }}>★</Text>
-                              ))}
-                            </View>
-                            <Text style={[ad.ratingVal, { color: c.color }]}>{val}</Text>
-                          </View>
-                        );
-                      })}
-
-                      {/* Comment */}
                       {item.comments ? (
                         <View style={ad.commentBox}>
                           <Text style={ad.commentLabel}>💬 Comment</Text>
@@ -773,110 +829,145 @@ function AdminDashboard({ apiUrl, onLogout }) {
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
+
+      {/* ── Export Modal ── */}
+      <Modal visible={showExportOptions} transparent animationType="fade">
+        <View style={ad.modalOverlay}>
+          <View style={ad.exportModal}>
+            <Text style={ad.exportModalTitle}>📥 Download Excel Report</Text>
+            <TouchableOpacity style={ad.exportModalBtn} onPress={() => {
+              const d = new Date().toISOString().slice(0, 10);
+              handleExport(`from_date=${d}&to_date=${d}`);
+            }}>
+              <Text style={ad.exportModalBtnText}>📅 Today's Data</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={ad.exportModalBtn} onPress={() => {
+              const d = new Date();
+              const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+              const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
+              handleExport(`from_date=${firstDay}&to_date=${lastDay}`);
+            }}>
+              <Text style={ad.exportModalBtnText}>📆 This Month</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={ad.exportModalBtn} onPress={() => handleExport()}>
+              <Text style={ad.exportModalBtnText}>🗂️ Overall Data</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={ad.exportModalCancel} onPress={() => setShowExportOptions(false)}>
+              <Text style={ad.exportModalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
 
 const ad = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F7FF' },
+  safe: { flex: 1, backgroundColor: '#F8FAFC' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
 
   // Header
   header: {
-    backgroundColor: '#0D47A1', paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 14 : 10,
-    paddingBottom: 14, flexDirection: 'row',
-    alignItems: 'center', gap: 8,
+    backgroundColor: '#FFFFFF', paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 24,
+    paddingBottom: 20, flexDirection: 'row',
+    alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
-  headerSub: { fontSize: 11, color: '#90CAF9' },
-  refreshIconBtn: { padding: 8 },
-  exportBtn: { backgroundColor: '#FFD54F', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  exportText: { color: '#0D47A1', fontSize: 12, fontWeight: '800' },
-  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  logoutText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  headerTitle: { fontSize: 24, fontWeight: '900', color: '#0F172A', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748B', marginTop: 2, fontWeight: '600' },
+  refreshIconBtn: { padding: 8, backgroundColor: '#F1F5F9', borderRadius: 12 },
+  exportBtn: { backgroundColor: '#EFF6FF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  exportText: { color: '#2563EB', fontSize: 13, fontWeight: '800' },
+  logoutBtn: { backgroundColor: '#FEF2F2', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  logoutText: { color: '#DC2626', fontSize: 13, fontWeight: '800' },
 
-  // Tabs
-  tabsScroll: { backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', elevation: 3 },
-  tabs: { paddingHorizontal: 16, gap: 32 },
-  tab: { paddingVertical: 14, borderBottomWidth: 3, borderBottomColor: 'transparent' },
-  tabOn: { borderBottomColor: '#0D47A1' },
-  tabText: { fontSize: 14, fontWeight: '700', color: '#A0AEC0' },
-  tabTextOn: { color: '#0D47A1' },
+  toggleBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'transparent', alignItems: 'center' },
+  toggleBtnOn: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  toggleText: { fontSize: 14, fontWeight: '700', color: '#94A3B8' },
+  toggleTextOn: { color: '#0F172A' },
 
-  // Hero KPI card
+  tabsScroll: { backgroundColor: 'transparent', paddingVertical: 16 },
+  tabs: { paddingHorizontal: 20, gap: 12 },
+  tab: { paddingVertical: 12, paddingHorizontal: 24, borderRadius: 24, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', elevation: 2, shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: {width: 0, height: 4} },
+  tabOn: { backgroundColor: '#2563EB', borderColor: '#2563EB' },
+  tabText: { fontSize: 14, fontWeight: '800', color: '#64748B' },
+  tabTextOn: { color: '#FFFFFF' },
+
   heroCard: {
-    backgroundColor: '#0D47A1', borderRadius: 22, padding: 24,
+    backgroundColor: '#FFFFFF', borderRadius: 32, padding: 28,
     flexDirection: 'row', alignItems: 'center',
-    elevation: 10, shadowColor: '#0D47A1', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 10 },
+    elevation: 12, shadowColor: '#2563EB', shadowOpacity: 0.08, shadowRadius: 30, shadowOffset: { width: 0, height: 15 },
+    borderWidth: 1, borderColor: '#E0E7FF',
   },
   heroLeft: { flex: 1, gap: 8 },
-  heroLabel: { fontSize: 13, color: '#90CAF9', fontWeight: '600' },
-  heroCount: { fontSize: 52, fontWeight: '900', color: '#FFFFFF', letterSpacing: -2 },
-  healthBadge: { alignSelf: 'flex-start', borderRadius: 20, borderWidth: 1.5, paddingHorizontal: 12, paddingVertical: 5 },
+  heroLabel: { fontSize: 12, color: '#64748B', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  heroCount: { fontSize: 56, fontWeight: '900', color: '#0F172A', letterSpacing: -2 },
+  healthBadge: { alignSelf: 'flex-start', borderRadius: 20, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 6 },
   healthBadgeText: { fontSize: 12, fontWeight: '800' },
   heroRight: { alignItems: 'center', gap: 4 },
-  heroScoreEmoji: { fontSize: 44 },
-  heroScore: { fontSize: 32, fontWeight: '900', color: '#FFD54F', letterSpacing: -1 },
-  heroScoreSub: { fontSize: 11, color: '#90CAF9', fontWeight: '600' },
+  heroScoreEmoji: { fontSize: 48 },
+  heroScore: { fontSize: 36, fontWeight: '900', color: '#2563EB', letterSpacing: -1 },
+  heroScoreSub: { fontSize: 12, color: '#94A3B8', fontWeight: '700' },
 
-  // Section card (white rounded container)
   sectionCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18,
-    elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10,
+    backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24,
+    elevation: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 16, shadowOffset: {width: 0, height: 4},
+    borderWidth: 1, borderColor: '#F1F5F9',
   },
-  sectionCardTitle: { fontSize: 16, fontWeight: '800', color: '#1A202C', marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1A202C', marginTop: 4 },
+  sectionCardTitle: { fontSize: 16, fontWeight: '900', color: '#0F172A', marginBottom: 20, letterSpacing: -0.5 },
+  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#0F172A', marginTop: 10, letterSpacing: -0.5, marginBottom: 8 },
 
-  // Monthly buttons
   monthBtn: {
-    backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 18, paddingVertical: 14,
     borderWidth: 1.5, borderColor: '#E2E8F0',
-    elevation: 1,
+    elevation: 1, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5,
   },
-  monthBtnOn: { backgroundColor: '#0D47A1', borderColor: '#0D47A1', elevation: 4 },
-  monthBtnTxt: { fontSize: 13, fontWeight: '700', color: '#4A5568' },
+  monthBtnOn: { backgroundColor: '#0F172A', borderColor: '#0F172A', elevation: 6, shadowOpacity: 0.15, shadowRadius: 10 },
+  monthBtnTxt: { fontSize: 14, fontWeight: '800', color: '#64748B' },
   monthBtnTxtOn: { color: '#FFFFFF' },
 
   // Monthly Overview Hero Card
   monthOverviewCard: {
-    backgroundColor: '#0D47A1', borderRadius: 22, padding: 22,
+    backgroundColor: '#FFFFFF', borderRadius: 28, padding: 24,
     flexDirection: 'row', alignItems: 'stretch',
-    elevation: 10, shadowColor: '#0D47A1', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 10 },
+    elevation: 8, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 24, shadowOffset: { width: 0, height: 10 },
+    borderWidth: 1, borderColor: '#E2E8F0',
     gap: 0,
   },
   monthOverviewLeft: { flex: 1, gap: 6, paddingRight: 16 },
-  monthOverviewMonthLabel: { fontSize: 11, color: '#90CAF9', fontWeight: '800', letterSpacing: 1.5 },
-  monthOverviewCount: { fontSize: 50, fontWeight: '900', color: '#FFFFFF', letterSpacing: -2, lineHeight: 56 },
-  monthOverviewCountLabel: { fontSize: 13, color: '#90CAF9', fontWeight: '600', marginTop: -6 },
+  monthOverviewMonthLabel: { fontSize: 12, color: '#64748B', fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
+  monthOverviewCount: { fontSize: 50, fontWeight: '900', color: '#0F172A', letterSpacing: -2, lineHeight: 56 },
+  monthOverviewCountLabel: { fontSize: 13, color: '#94A3B8', fontWeight: '700', marginTop: -6 },
   monthOverviewBadge: { alignSelf: 'flex-start', borderRadius: 20, borderWidth: 1.5, paddingHorizontal: 12, paddingVertical: 5, marginTop: 4 },
   monthOverviewBadgeText: { fontSize: 12, fontWeight: '800' },
 
-  monthOverviewDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginHorizontal: 0 },
+  monthOverviewDivider: { width: 1, backgroundColor: '#F1F5F9', marginHorizontal: 0 },
 
   monthOverviewRight: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingLeft: 16 },
   monthOverviewMood: { fontSize: 42, lineHeight: 54, includeFontPadding: false },
-  monthOverviewScore: { fontSize: 36, fontWeight: '900', color: '#FFD54F', letterSpacing: -1, lineHeight: 42 },
-  monthOverviewScoreSub: { fontSize: 11, color: '#90CAF9', fontWeight: '600' },
-  monthOverviewBar: { width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, marginTop: 6, overflow: 'hidden' },
-  monthOverviewBarFill: { height: 6, backgroundColor: '#FFD54F', borderRadius: 6 },
+  monthOverviewScore: { fontSize: 36, fontWeight: '900', color: '#2563EB', letterSpacing: -1, lineHeight: 42 },
+  monthOverviewScoreSub: { fontSize: 12, color: '#94A3B8', fontWeight: '700' },
+  monthOverviewBar: { width: '100%', height: 6, backgroundColor: '#F1F5F9', borderRadius: 6, marginTop: 6, overflow: 'hidden' },
+  monthOverviewBarFill: { height: 6, backgroundColor: '#2563EB', borderRadius: 6 },
 
   // Meal dot indicator
   mealDot: { width: 10, height: 10, borderRadius: 5 },
 
   // Records tab
   filterChip: {
-    borderRadius: 22, borderWidth: 1.5, borderColor: '#E2E8F0',
-    paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#FFFFFF',
+    borderRadius: 24, borderWidth: 1.5, borderColor: '#E2E8F0',
+    paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#FFFFFF',
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 5, shadowOffset: {width:0, height:2}
   },
-  filterChipOn: { borderColor: '#0D47A1', backgroundColor: '#0D47A1' },
-  filterChipText: { fontSize: 13, fontWeight: '700', color: '#4A5568' },
+  filterChipOn: { borderColor: '#2563EB', backgroundColor: '#2563EB' },
+  filterChipText: { fontSize: 14, fontWeight: '800', color: '#64748B' },
   filterChipTextOn: { color: '#FFFFFF' },
 
   recordCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16,
-    gap: 10, elevation: 3, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
+    backgroundColor: '#FFFFFF', borderRadius: 24, padding: 20,
+    gap: 12, elevation: 6, shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 }, borderWidth: 1, borderColor: '#F1F5F9',
   },
   recordHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   mealPill: {
@@ -884,23 +975,24 @@ const ad = StyleSheet.create({
     borderRadius: 22, paddingHorizontal: 12, paddingVertical: 7,
     borderWidth: 1.5,
   },
-  mealPillText: { fontSize: 13, fontWeight: '800' },
-  recordScore: { fontSize: 22, fontWeight: '900' },
+  mealPillText: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  recordScore: { fontSize: 24, fontWeight: '900', letterSpacing: -1 },
 
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
-  ratingLabel: { fontSize: 13, fontWeight: '600', color: '#4A5568', flex: 1 },
-  ratingVal: { fontSize: 14, fontWeight: '800', minWidth: 16, textAlign: 'right' },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  ratingLabel: { fontSize: 14, fontWeight: '700', color: '#64748B', flex: 1 },
+  ratingVal: { fontSize: 15, fontWeight: '900', minWidth: 20, textAlign: 'right' },
 
-  commentBox: { backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12, borderLeftWidth: 3, borderLeftColor: '#F6E05E' },
-  commentLabel: { fontSize: 11, fontWeight: '800', color: '#744210', marginBottom: 4, letterSpacing: 0.5 },
-  commentText: { fontSize: 13, color: '#744210', fontStyle: 'italic', lineHeight: 18 },
+  commentBox: { backgroundColor: '#F8FAFC', borderRadius: 16, padding: 16, borderLeftWidth: 4, borderLeftColor: '#CBD5E1', marginTop: 4 },
+  commentLabel: { fontSize: 11, fontWeight: '800', color: '#94A3B8', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' },
+  commentText: { fontSize: 14, color: '#0F172A', fontStyle: 'italic', lineHeight: 22 },
 
   // Empty state
   emptyBox: {
     alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 48, paddingHorizontal: 24,
-    backgroundColor: '#FFFFFF', borderRadius: 18,
-    elevation: 1,
+    paddingVertical: 64, paddingHorizontal: 24,
+    backgroundColor: '#FFFFFF', borderRadius: 32,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 15,
+    borderWidth: 2, borderColor: '#F1F5F9', borderStyle: 'dashed'
   },
 
   // Legacy (keep for safety)
@@ -908,6 +1000,15 @@ const ad = StyleSheet.create({
   actionCard: { flex: 1, borderRadius: 20, padding: 20, elevation: 4 },
   actionCardTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginTop: 8 },
   actionCardSub: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, lineHeight: 18 },
+
+  // Modal styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.4)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  exportModal: { backgroundColor: '#FFFFFF', borderRadius: 32, padding: 32, width: '100%', maxWidth: 360, elevation: 20, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 30, shadowOffset: {width: 0, height: 10} },
+  exportModalTitle: { fontSize: 20, fontWeight: '900', color: '#0F172A', marginBottom: 24, textAlign: 'center', letterSpacing: -0.5 },
+  exportModalBtn: { backgroundColor: '#F8FAFC', borderRadius: 16, paddingVertical: 18, marginBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
+  exportModalBtnText: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
+  exportModalCancel: { marginTop: 12, paddingVertical: 16, alignItems: 'center' },
+  exportModalCancelText: { fontSize: 16, fontWeight: '800', color: '#EF4444' },
 });
 
 
@@ -941,7 +1042,7 @@ function StarRow({ emoji, label, value, onChange }) {
     <View style={sr.row}>
       <View style={sr.left}>
         <Text style={sr.emoji}>{emoji}</Text>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={sr.label}>{label}</Text>
           {value > 0 && <Text style={[sr.moodLabel, { color: mood.color }]}>{mood.label}</Text>}
         </View>
@@ -961,9 +1062,9 @@ function StarRow({ emoji, label, value, onChange }) {
 }
 const sr = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F0F4F8' },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  left: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 10 },
   emoji: { fontSize: 22 },
-  label: { fontSize: 14, fontWeight: '700', color: '#2D3748' },
+  label: { fontSize: 14, fontWeight: '700', color: '#2D3748', flexShrink: 1, flexWrap: 'wrap' },
   moodLabel: { fontSize: 11, fontWeight: '700', marginTop: 2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stars: { flexDirection: 'row', gap: 3 },
@@ -1021,13 +1122,22 @@ const ob = StyleSheet.create({
 
 // ── Feedback Form (User) ──────────────────────────────────────
 function FeedbackForm({ apiUrl, onLogout, onBack }) {
-  const [meal, setMeal] = useState('');
+  const [lang, setLang] = useState('en');
+  const t = (k) => TRANSLATIONS[lang][k] || TRANSLATIONS.en[k];
+
+  const detectedMeal = detectMealType();
   const [ratings, setRatings] = useState({ ...INITIAL_RATINGS });
   const [comments, setComments] = useState('');
   const [loading, setLoading] = useState(false);
-  const [screen, setScreen] = useState('form'); // 'form' | 'success'
+  const [screen, setScreen] = useState('form');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
+
+  const anyRatingIsLow = Object.values(ratings).some(v => v > 0 && v <= 2);
+  const commentRequired = anyRatingIsLow;
+  const overallAvg = Object.values(ratings).filter(v => v > 0).reduce((a, b) => a + b, 0) /
+    (Object.values(ratings).filter(v => v > 0).length || 1);
+  const isLowFeedback = overallAvg > 0 && overallAvg < 3;
 
   const showSuccess = () => {
     setScreen('success');
@@ -1037,30 +1147,36 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
     ]).start();
     setTimeout(() => {
       setScreen('form');
-      setMeal(''); setRatings({ ...INITIAL_RATINGS }); setComments('');
+      setRatings({ ...INITIAL_RATINGS }); setComments('');
       fadeAnim.setValue(0); slideAnim.setValue(40);
     }, 4000);
   };
 
   const submit = async () => {
-    if (!meal) { Alert.alert('⚠️ Select Meal', 'Please choose Breakfast, Lunch or Dinner.'); return; }
     const missing = RATING_FIELDS.filter(f => ratings[f.key] === 0);
-    if (missing.length) { Alert.alert('⭐ Missing Ratings', `Please rate:\n${missing.map(f => `• ${f.label}`).join('\n')}`); return; }
+    if (missing.length) {
+      Alert.alert(t('missingRatings'), t('pleaseRate'));
+      return;
+    }
+    if (commentRequired && !comments.trim()) {
+      Alert.alert(t('commentNeeded'), t('commentNeededMsg'));
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`${apiUrl}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          canteen_name: 'Main Canteen',
-          canteen_id: 1,
-          meal_type: meal,
-          food_quality: ratings.food_quality,
-          food_taste: ratings.food_taste,
-          cleanliness: ratings.cleanliness,
-          staff_behavior: ratings.staff_behavior,
-          food_hygiene: ratings.food_hygiene,
-          comments: comments.trim() || null,
+          canteen_name:  'Main Canteen',
+          canteen_id:    1,
+          meal_type:     detectedMeal.label,
+          food_quality:  ratings.food_quality,
+          food_taste:    ratings.food_taste,
+          cleanliness:   ratings.cleanliness,
+          staff_behavior:ratings.staff_behavior,
+          food_hygiene:  ratings.food_hygiene,
+          comments:      comments.trim() || null,
         }),
       });
       if (!res.ok) throw new Error('Server error');
@@ -1068,7 +1184,7 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
       showSuccess();
     } catch (e) {
       setLoading(false);
-      Alert.alert('❌ Connection Error', `Backend not reachable.\nServer: ${apiUrl}`);
+      Alert.alert(t('connErr'), `${t('connErrMsg')}\n${apiUrl}`);
     }
   };
 
@@ -1078,12 +1194,10 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
       <View style={s.successPage}>
         <Animated.View style={[s.successBox, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={s.successBigEmoji}>🎉</Text>
-          <Text style={s.successTitle}>Thank You!</Text>
-          <Text style={s.successSub}>Your feedback has been{'\n'}submitted anonymously.</Text>
-          <View style={s.anonPill}>
-            <Text style={s.anonPillText}>🔒 No personal data collected</Text>
-          </View>
-          <Text style={s.resetNote}>Form resets in a few seconds...</Text>
+          <Text style={s.successTitle}>{t('successTitle')}</Text>
+          <Text style={s.successSub}>{t('successSub')}</Text>
+          <View style={s.anonPill}><Text style={s.anonPillText}>{t('anonNote')}</Text></View>
+          <Text style={s.resetNote}>{t('resetNote')}</Text>
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -1094,65 +1208,100 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
       <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
       <View style={s.header}>
         <View style={s.headerLeft}>
-          <Text style={s.headerIcon}>🍽️</Text>
-          <View>
-            <Text style={s.headerTitle}>Canteen Feedback</Text>
-            <Text style={s.headerSub}>Help us serve you better</Text>
+          <Text style={[s.headerIcon, { fontSize: 24, marginRight: 4 }]}>🍽️</Text>
+          <View style={{ flexShrink: 1 }}>
+            <Text style={s.headerTitle} numberOfLines={1} adjustsFontSizeToFit>{t('headerTitle')}</Text>
+            <Text style={s.headerSub}>{t('headerSub')}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 10 }}>
+          <TouchableOpacity
+            style={[s.langBtn, { backgroundColor: lang === 'ta' ? '#7B1FA2' : '#1565C0', marginRight: 10 }]}
+            onPress={() => setLang(l => l === 'en' ? 'ta' : 'en')}
+          >
+            <Text style={s.langBtnText}>{lang === 'en' ? 'தமிழ்' : 'EN'}</Text>
+          </TouchableOpacity>
           {onBack ? (
             <TouchableOpacity style={s.backBtn} onPress={onBack}>
-              <Text style={s.logoutText}>← Back</Text>
+              <Text style={s.logoutText}>{t('back')}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={s.logoutBtn} onPress={onLogout}>
-              <Text style={s.logoutText}>Logout</Text>
+              <Text style={s.logoutText}>{t('logout')}</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-
-
-          <View style={s.card}>
-            <Text style={s.cardTitle}>🍴  Select Your Meal</Text>
-            <View style={s.mealRow}>
-              {MEAL_TYPES.map(({ label, emoji }) => (
-                <TouchableOpacity key={label} style={[s.mealBtn, meal === label && s.mealBtnOn]} onPress={() => setMeal(label)} activeOpacity={0.8}>
-                  <Text style={s.mealEmoji}>{emoji}</Text>
-                  <Text style={[s.mealText, meal === label && s.mealTextOn]}>{label}</Text>
-                </TouchableOpacity>
-              ))}
+          {/* ── Auto-Detected Meal Type ── */}
+          <View style={[s.mealDetectCard, { borderColor: detectedMeal.color }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Text style={{ fontSize: 36 }}>{detectedMeal.emoji}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.mealDetectLabel, { color: detectedMeal.color }]}>
+                  {t('mealDetected')}
+                </Text>
+                <Text style={[s.mealDetectName, { color: detectedMeal.color }]}>
+                  {detectedMeal.label}
+                </Text>
+              </View>
+              <View style={[s.mealDetectBadge, { backgroundColor: detectedMeal.color + '20', borderColor: detectedMeal.color }]}>
+                <Text style={{ fontSize: 10, color: detectedMeal.color, fontWeight: '800' }}>AUTO</Text>
+              </View>
             </View>
           </View>
 
+          {/* ── Low Feedback Warning ── */}
+          {isLowFeedback && (
+            <View style={s.lowFeedbackBanner}>
+              <Text style={s.lowFeedbackText}>{t('lowFeedback')} — {overallAvg.toFixed(1)}/5</Text>
+            </View>
+          )}
+
           <View style={s.card}>
-            <Text style={s.cardTitle}>⭐  Rate Your Experience</Text>
-            <Text style={s.cardHint}>Tap stars — watch the emoji react!</Text>
+            <Text style={s.cardTitle}>{t('rateExperience')}</Text>
+            <Text style={s.cardHint}>{t('tapStars')}</Text>
             {RATING_FIELDS.map(f => (
-              <StarRow key={f.key} emoji={f.emoji} label={f.label} value={ratings[f.key]} onChange={v => setRatings(p => ({ ...p, [f.key]: v }))} />
+              <StarRow key={f.key} emoji={f.emoji} label={t(f.key)}
+                value={ratings[f.key]}
+                onChange={v => setRatings(p => ({ ...p, [f.key]: v }))} />
             ))}
           </View>
 
           <OverallBar ratings={ratings} />
 
-          <View style={s.card}>
-            <Text style={s.cardTitle}>💬  Additional Comments</Text>
-            <TextInput style={s.textarea} multiline numberOfLines={4} maxLength={500}
-              placeholder="Any additional comments? (Optional)" placeholderTextColor="#A0AEC0"
-              value={comments} onChangeText={setComments} textAlignVertical="top" />
-            <Text style={s.charCount}>{comments.length} / 500</Text>
+          <View style={[s.card, commentRequired && { borderWidth: 2, borderColor: '#E53E3E' }]}>
+            <Text style={s.cardTitle}>{t('addComments')}</Text>
+            {commentRequired && (
+              <View style={s.criticalBanner}>
+                <Text style={s.criticalBannerText}>{t('criticalAlert')}</Text>
+              </View>
+            )}
+            <TextInput
+              style={[s.textarea, commentRequired && { borderColor: '#E53E3E', borderWidth: 2 }]}
+              multiline numberOfLines={4} maxLength={500}
+              placeholder={commentRequired ? t('commentHint') : t('commentOptional')}
+              placeholderTextColor={commentRequired ? '#E53E3E' : '#A0AEC0'}
+              value={comments} onChangeText={setComments} textAlignVertical="top"
+            />
+            <Text style={[s.charCount, commentRequired && !comments.trim() && { color: '#E53E3E' }]}>
+              {comments.length} / 500 {commentRequired && !comments.trim() ? ' ⚠️ Required' : ''}
+            </Text>
           </View>
 
-          <TouchableOpacity style={[s.submitBtn, loading && s.submitOff]} onPress={submit} disabled={loading} activeOpacity={0.85}>
-            <Text style={s.submitText}>{loading ? '⏳  Submitting...' : '✅  Submit Feedback'}</Text>
+          <TouchableOpacity
+            style={[s.submitBtn, loading && s.submitOff,
+              commentRequired && !comments.trim() && { backgroundColor: '#9AE6B4' }]}
+            onPress={submit} disabled={loading} activeOpacity={0.85}
+          >
+            <Text style={s.submitText}>{loading ? t('submitting') : t('submit')}</Text>
           </TouchableOpacity>
 
-          <Text style={s.footer}>🔒 Your feedback is 100% anonymous and helps{'\n'}improve our canteen services every day.</Text>
+          <Text style={s.footer}>{t('footer')}</Text>
           <View style={{ height: 32 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1164,13 +1313,13 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F7F8FC' },
   header: {
     backgroundColor: '#1A1A2E',
-    paddingTop: Platform.OS === 'android' ? 16 : 10,
-    paddingBottom: 16, paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 24,
+    paddingBottom: 16, paddingHorizontal: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 4 },
   headerIcon: { fontSize: 32 },
-  headerTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: '800' },
+  headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   headerSub: { color: '#A0AEC0', fontSize: 12, marginTop: 2 },
   anonBadge: { backgroundColor: '#2D3748', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
   anonText: { color: '#68D391', fontSize: 11, fontWeight: '600' },
@@ -1211,6 +1360,25 @@ const s = StyleSheet.create({
   submitOff: { backgroundColor: '#9AE6B4', elevation: 0 },
   submitText: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   footer: { textAlign: 'center', fontSize: 12, color: '#A0AEC0', lineHeight: 18, paddingHorizontal: 20 },
+  langBtn: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  langBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  mealDetectCard: {
+    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 2,
+    elevation: 4, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
+  },
+  mealDetectLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
+  mealDetectName:  { fontSize: 20, fontWeight: '900', marginTop: 2 },
+  mealDetectBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1.5 },
+  criticalBanner: {
+    backgroundColor: '#FFF5F5', borderRadius: 10, padding: 10,
+    borderLeftWidth: 4, borderLeftColor: '#E53E3E',
+  },
+  criticalBannerText: { color: '#9B2C2C', fontSize: 12, fontWeight: '700' },
+  lowFeedbackBanner: {
+    backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12,
+    borderLeftWidth: 4, borderLeftColor: '#F6AD55', flexDirection: 'row', alignItems: 'center',
+  },
+  lowFeedbackText: { color: '#744210', fontSize: 13, fontWeight: '700' },
   successPage: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7F8FC', padding: 24 },
   successBox: {
     backgroundColor: '#FFFFFF', borderRadius: 24, padding: 40, alignItems: 'center',
@@ -1232,7 +1400,11 @@ export default function App() {
 
   // Load saved API URL
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then(saved => { if (saved) setApiUrl(saved); });
+    if (Platform.OS === 'web') {
+      setApiUrl('http://localhost:8000');
+    } else {
+      AsyncStorage.getItem(STORAGE_KEY).then(saved => { if (saved) setApiUrl(saved); });
+    }
   }, []);
 
   const handleLogin = (user, role) => setAuthState({ user, role });
