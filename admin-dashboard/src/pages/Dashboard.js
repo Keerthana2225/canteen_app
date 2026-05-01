@@ -153,15 +153,32 @@ export default function Dashboard() {
             {/* Best Category Highlight */}
             {summary && summary.total_count > 0 && (
               <div style={{ background: '#f8fafc', borderRadius: 16, padding: '20px', border: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Performing</div>
-                {(() => { 
-                  const best = CATS.reduce((a, b) => (summary[a.key] || 0) > (summary[b.key] || 0) ? a : b); 
+                {(() => {
+                  const vals = CATS.map(c => summary[c.key] || 0);
+                  const maxVal = Math.max(...vals);
+                  const allEqual = vals.every(v => v === vals[0]);
+                  if (allEqual) {
+                    return (
+                      <>
+                        <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>All Categories</div>
+                        <div style={{ marginTop: 8 }}>
+                          <div style={{ fontSize: 28 }}>⚖️</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>All Equal</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginTop: 2 }}>{vals[0].toFixed(1)} ⭐ across all</div>
+                        </div>
+                      </>
+                    );
+                  }
+                  const best = CATS[vals.indexOf(maxVal)];
                   return (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 24 }}>{best.icon}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{best.label}</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#10b981', marginTop: 2 }}>{(summary[best.key] || 0).toFixed(1)} ⭐</div>
-                    </div>
+                    <>
+                      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Performing</div>
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ fontSize: 24 }}>{best.icon}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{best.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#10b981', marginTop: 2 }}>{maxVal.toFixed(1)} ⭐</div>
+                      </div>
+                    </>
                   );
                 })()}
               </div>
