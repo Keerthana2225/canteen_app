@@ -14,7 +14,7 @@ The **Smart Canteen Feedback Management System** is a comprehensive, digital sol
 *   **Frontend (Mobile App)**: React Native (Expo)
 *   **Frontend (Admin Web)**: React.js
 *   **Backend API**: FastAPI (Python)
-*   **Database**: MS SQL Server / SQLite (via SQLAlchemy ORM)
+*   **Database**: MS SQL Server (via SQLAlchemy ORM)
 
 ### Installation and Setup Instructions
 
@@ -67,16 +67,16 @@ canteen_app/
 ### System Architecture
 The system operates on a modern 3-tier architecture:
 1.  **Mobile App (Client)**: Acts as a physical kiosk in the canteen. Users submit ratings.
-2.  **Backend API (Server)**: A RESTful FastAPI server processes incoming JSON data, performs validation, calculates the `overall_rating`, and assigns the `is_critical` flag.
-3.  **Database**: SQLAlchemy safely stores the records.
-4.  **Admin Dashboard (Client)**: Fetches aggregated data from the backend to display charts, export to Excel, and filter critical records.
+2.  **Backend API (Server)**: The brain of the system. It processes incoming data, performs validation, calculates the `overall_rating`, and assigns the `is_critical` flag.
+3.  **Database**: Safely stores all the structured records.
+4.  **Admin Dashboard (Client)**: A website that fetches aggregated data from the backend to display charts, export to Excel, and filter critical records.
 
 ### Modules Description
-*   **Feedback Module**: The core UI where users provide 1-5 star ratings for Food Quality, Food Taste, Food Hygiene, Cleanliness, and Staff Behavior.
-*   **Validation Module**: Enforces strict data integrity (e.g., mandatory comments for 1-star ratings).
+*   **Feedback Module**: The core interface where users provide 1-5 star ratings for Food Quality, Food Taste, Food Hygiene, Cleanliness, and Staff Behavior.
+*   **Validation Module**: Enforces strict data rules (e.g., forcing a user to type a comment if they select a 1-star rating).
 *   **Meal Detection Module**: A time-based algorithm that automatically assigns the correct meal tag based on the local device clock (e.g., 07:00-11:00 = Breakfast), ensuring no manual selection errors.
-*   **Analytics Module**: Backend routers that aggregate SQL data (averages, counts, critical sums) grouped by month and meal type.
-*   **Reporting Module**: Allows the administrator to export data securely into Excel format for official record-keeping.
+*   **Analytics Module**: Code on the server that does math on the database data (averages, counts, critical sums) so the dashboard can display it easily.
+*   **Reporting Module**: Allows the administrator to export data securely into an Excel format for official record-keeping.
 
 ### Features Explanation
 *   **Rating System**: Uses a 1-5 scale across 5 granular categories to pinpoint exact areas of improvement.
@@ -102,7 +102,7 @@ The core table structure (`Feedback`):
 
 ## 3. API Documentation Section
 
-The backend APIs handle data securely. Below are the key endpoints and how to test them using **Postman**.
+An **API (Application Programming Interface)** is simply a bridge that allows the mobile app and web dashboard to talk to the database. Below are the key endpoints and how to test them using **Postman** (a popular tool for testing APIs).
 
 ### Core Endpoints:
 *   **`POST /feedback`** → Submit new feedback.
@@ -111,12 +111,12 @@ The backend APIs handle data securely. Below are the key endpoints and how to te
 *   **`GET /analytics/monthly`** → Get detailed analytics for the graphs.
 
 ### How to Test APIs using Postman
-Since you only have Postman, here is exactly how to test the core feedback submission endpoint manually:
+Here is exactly how to test the core feedback submission endpoint manually using Postman:
 
 1.  Open **Postman** and click **New Request**.
-2.  Change the request method dropdown from `GET` to **`POST`**.
+2.  Change the request method dropdown from `GET` to **`POST`**. *(POST means we are sending new data to the server).*
 3.  In the URL bar, enter: `http://localhost:8000/feedback`
-4.  Go to the **Body** tab, select **raw**, and change the format dropdown from `Text` to **`JSON`**.
+4.  Go to the **Body** tab, select **raw**, and change the format dropdown from `Text` to **`JSON`**. *(JSON is just a simple text format used to send structured data over the internet).*
 5.  Paste the following test data into the box:
     ```json
     {
@@ -140,33 +140,33 @@ Since you only have Postman, here is exactly how to test the core feedback submi
 1.  **User Interaction**: An employee approaches the tablet kiosk running the React Native Mobile App.
 2.  **Meal Auto-Detection**: The app silently checks the system clock and assigns the `meal_type` parameter automatically (e.g., "Lunch").
 3.  **Input & Validation**: The user taps 1-5 stars for the categories. If they tap '1' star, the React Native state immediately enforces a mandatory written comment.
-4.  **Submission**: The app sends a `POST` request with a JSON payload to the FastAPI backend using the JavaScript `fetch()` API.
+4.  **Submission**: The app sends a `POST` request with the data payload to the FastAPI backend.
 5.  **Backend Processing**: FastAPI calculates `overall_rating = sum(ratings)/5`. It then evaluates: `if overall_rating <= 2: is_critical = 1`.
-6.  **Database Storage**: The structured record is committed to the database via SQLAlchemy ORM.
-7.  **Admin Review**: An administrator logs into the React Dashboard. The dashboard makes `GET` requests using Axios and renders the new data points on the Recharts graphs.
+6.  **Database Storage**: The structured record is committed to the database.
+7.  **Admin Review**: An administrator logs into the React Dashboard. The dashboard makes `GET` requests to retrieve the data and draws the graphs on the screen.
 
 ---
 
 ## 5. Tools and Technologies Used
 
-To provide a complete academic understanding, here is a breakdown of every specific tool and technique utilized in the system and *why* it was chosen:
+To provide a complete academic understanding, here is a breakdown of every specific tool utilized in the system, with beginner-friendly explanations of what they mean and *why* they were chosen:
 
-*   **React Native (Expo)**: Used for the mobile application. Expo provides a managed workflow that drastically speeds up development and allows the app to be seamlessly deployed as a physical Android tablet kiosk.
-*   **Local State Translation Dictionary (Tamil Support)**: Instead of using an external API like Google Translate, the Tamil language feature uses a hardcoded JavaScript dictionary object (`TRANSLATIONS`) managed by React's `useState` hook. 
-    *   *Why?* To guarantee that the application functions 100% offline, has zero loading latency when switching languages, and ensures perfect, culturally accurate canteen terminology.
-*   **Dynamic UI Styling (Critical Highlights)**: The red glowing highlights for critical feedback are achieved using React Native's `StyleSheet` and conditional rendering. 
-    *   *Why?* By checking `if (record.is_critical === 1)`, the UI dynamically injects a specific CSS-like style (`backgroundColor: '#FEF2F2'`, `borderColor: '#DC2626'`) strictly on the client side, ensuring admins' eyes are drawn instantly to problems.
+*   **React Native (Expo)**: A framework used to build the mobile application. Expo provides a simplified workflow that allows developers to build a mobile app using web technologies (JavaScript) and seamlessly deploy it as a physical Android tablet kiosk app.
+*   **Local State Translation Dictionary (Tamil Support)**: Instead of using an external internet service like Google Translate, the Tamil language feature uses a hardcoded dictionary embedded directly in the app's code. 
+    *   *Why?* To guarantee that the application functions 100% offline, has zero loading lag when switching languages, and ensures we can use perfectly accurate, culturally specific canteen terminology rather than awkward robotic translations.
+*   **Dynamic UI Styling (Critical Highlights)**: The red glowing highlights for critical feedback are achieved using React Native's styling system. 
+    *   *Why?* By automatically checking if a record is critical (`is_critical === 1`), the code dynamically injects a red CSS-like style directly into the screen. This ensures admins' eyes are instantly drawn to major problems without needing to click or search.
 *   **FastAPI**: Used for the backend server. 
-    *   *Why?* Chosen for its extreme execution speed and automatic data validation using Python's Pydantic models. It guarantees that bad data (e.g., a rating of 6 out of 5) cannot crash the database.
-*   **Uvicorn**: Used as the ASGI web server. 
-    *   *Why?* FastAPI is an asynchronous framework, and Uvicorn provides the lightning-fast asynchronous server required to run it.
-*   **SQLAlchemy (ORM)**: Object-Relational Mapping library used to talk to the database. 
-    *   *Why?* It allows developers to interact with the database using Python objects instead of writing raw SQL queries. This drastically reduces the risk of "SQL Injection" hacking attacks and makes it easy to switch from SQLite to MS SQL Server without rewriting code.
-*   **React.js**: Used for the administrative web dashboard. React's component-based architecture makes it ideal for building complex interfaces.
-*   **Recharts**: A charting library built for React. 
-    *   *Why?* Used specifically to generate the beautiful, interactive bar charts and line graphs on the admin dashboard, visually representing the JSON analytics data.
-*   **Axios**: A JavaScript HTTP client. 
-    *   *Why?* Used inside the React dashboard to fetch data from the FastAPI backend. It is simpler and handles JSON conversion more cleanly than the standard `fetch()` API.
+    *   *Why?* It is an extremely fast Python framework that automatically validates data. This guarantees that bad or broken data (e.g., someone trying to submit a rating of 6 out of 5) is rejected before it can crash the database.
+*   **Uvicorn (ASGI Web Server)**: **ASGI** stands for *Asynchronous Server Gateway Interface*. It is a modern standard that allows a server to handle thousands of requests at the exact same time without freezing or waiting in line.
+    *   *Why?* FastAPI requires an ASGI server to run its asynchronous code, and Uvicorn is the lightning-fast engine that powers it.
+*   **SQLAlchemy (ORM)**: **ORM** stands for *Object-Relational Mapping*. It is a tool that automatically translates normal Python code into database commands (SQL).
+    *   *Why?* It allows developers to interact with the database securely without writing raw SQL queries. This drastically reduces the risk of "SQL Injection" hacking attacks and allows the system to securely communicate with the enterprise MS SQL Server.
+*   **React.js**: A popular tool created by Facebook used for building the administrative web dashboard. Its component-based architecture makes it ideal for building complex, interactive websites.
+*   **Recharts**: A charting tool built specifically for React. 
+    *   *Why?* Used specifically to generate the beautiful, interactive bar charts and line graphs on the admin dashboard, visually representing the raw analytics data.
+*   **Axios**: A JavaScript tool used to make HTTP requests over the internet.
+    *   *Why?* Used inside the React dashboard to fetch data from the FastAPI backend. It is much simpler to use and handles data conversion more cleanly than the default browser fetching tools.
 
 ---
 
