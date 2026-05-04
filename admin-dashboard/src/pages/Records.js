@@ -21,6 +21,34 @@ const CRITICAL_BADGE = () => (
   <span style={{ background: '#fee2e2', color: '#dc2626', padding: '2px 10px', borderRadius: 20, fontWeight: 700, fontSize: 11 }}>🔴 Critical</span>
 );
 
+function MetricBadge({ label, icon, value }) {
+  const color = value <= 2 ? '#ef4444' : value <= 3 ? '#f59e0b' : '#10b981';
+  const bg = value <= 2 ? '#fee2e2' : value <= 3 ? '#fffbeb' : '#ecfdf5';
+  return (
+    <div title={label} style={{ 
+      display: 'flex', alignItems: 'center', gap: 6, background: bg, color: color, 
+      padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 800,
+      border: `1px solid ${color}33`
+    }}>
+      <span style={{ fontSize: 12 }}>{icon}</span>
+      <span>{value}</span>
+      <span style={{ fontSize: 9, opacity: 0.8, fontWeight: 700, marginLeft: 2, textTransform: 'uppercase' }}>{label}</span>
+    </div>
+  );
+}
+
+function DetailedBreakdown({ row }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxWidth: 350 }}>
+      <MetricBadge label="Qual" icon="🏆" value={row.food_quality} />
+      <MetricBadge label="Taste" icon="🍽️" value={row.food_taste} />
+      <MetricBadge label="Hygiene" icon="🧼" value={row.food_hygiene} />
+      <MetricBadge label="Staff" icon="👤" value={row.staff_behavior} />
+      <MetricBadge label="Clean" icon="✨" value={row.cleanliness} />
+    </div>
+  );
+}
+
 export default function Records() {
   const [feedback,   setFeedback]   = useState([]);
   const [mealFilter, setMealFilter] = useState('');
@@ -99,16 +127,16 @@ export default function Records() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                {['ID','Date','Meal','Status','Quality','Taste','Overall','Comment'].map(h => (
+                {['ID','Date','Meal','Status','Detailed Breakdown','Overall','Comment'].map(h => (
                   <th key={h} style={{ padding: '14px 18px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>Loading records...</td></tr>
+                <tr><td colSpan={7} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>Loading records...</td></tr>
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={8} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>No feedback matches your criteria.</td></tr>
+                <tr><td colSpan={7} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>No feedback matches your criteria.</td></tr>
               ) : paginated.map((row, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: row.is_critical === 1 ? '#fff5f5' : 'transparent' }}>
                   <td style={{ padding: '14px 18px', fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>#{row.id}</td>
@@ -117,9 +145,8 @@ export default function Records() {
                     <span style={{ fontSize: 12, fontWeight: 700, background: '#f1f5f9', padding: '3px 10px', borderRadius: 20, color: '#334155' }}>{row.meal_type}</span>
                   </td>
                   <td style={{ padding: '14px 18px' }}>{row.is_critical === 1 ? <CRITICAL_BADGE /> : <span style={{ color: '#10b981', fontSize: 12, fontWeight: 700 }}>✅ Normal</span>}</td>
-                  <td style={{ padding: '14px 18px' }}><Stars value={row.food_quality} /></td>
-                  <td style={{ padding: '14px 18px' }}><Stars value={row.food_taste} /></td>
-                  <td style={{ padding: '14px 18px', fontWeight: 800, color: row.overall_rating < 2 ? '#dc2626' : row.overall_rating < 3 ? '#f59e0b' : '#10b981' }}>
+                  <td style={{ padding: '14px 18px' }}><DetailedBreakdown row={row} /></td>
+                  <td style={{ padding: '14px 18px', fontWeight: 800, color: row.overall_rating <= 2 ? '#dc2626' : row.overall_rating <= 3 ? '#f59e0b' : '#10b981' }}>
                     {row.overall_rating ? row.overall_rating.toFixed(1) : '—'}
                   </td>
                   <td style={{ padding: '14px 18px', maxWidth: 240 }}>

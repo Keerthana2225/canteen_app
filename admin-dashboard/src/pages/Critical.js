@@ -4,6 +4,34 @@ import axios from 'axios';
 
 const API = `http://${window.location.hostname}:8000`;
 
+function MetricBadge({ label, icon, value }) {
+  const color = value <= 2 ? '#ef4444' : value <= 3 ? '#f59e0b' : '#10b981';
+  const bg = value <= 2 ? '#fee2e2' : value <= 3 ? '#fffbeb' : '#ecfdf5';
+  return (
+    <div title={label} style={{ 
+      display: 'flex', alignItems: 'center', gap: 6, background: bg, color: color, 
+      padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800,
+      border: `1px solid ${color}33`
+    }}>
+      <span style={{ fontSize: 14 }}>{icon}</span>
+      <span>{value}</span>
+      <span style={{ fontSize: 10, opacity: 0.7, fontWeight: 600, marginLeft: 2 }}>{label}</span>
+    </div>
+  );
+}
+
+function DetailedBreakdown({ row }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+      <MetricBadge label="Quality" icon="🏆" value={row.food_quality} />
+      <MetricBadge label="Taste" icon="🍽️" value={row.food_taste} />
+      <MetricBadge label="Hygiene" icon="🧼" value={row.food_hygiene} />
+      <MetricBadge label="Staff" icon="👤" value={row.staff_behavior} />
+      <MetricBadge label="Clean" icon="✨" value={row.cleanliness} />
+    </div>
+  );
+}
+
 export default function Critical() {
   const [data,      setData]      = useState([]);
   const [fromDate,  setFromDate]  = useState('');
@@ -75,18 +103,21 @@ export default function Critical() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {data.map((item, i) => (
-            <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 20, border: '2px solid #fca5a5', boxShadow: '0 4px 16px rgba(220,38,38,0.1)', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-              <div style={{ background: '#fee2e2', borderRadius: 12, padding: '10px 14px', minWidth: 80, textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#dc2626' }}>{(item.overall_rating || 0).toFixed(1)}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', letterSpacing: 0.5 }}>/ 5.0</div>
+            <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 24, border: '2px solid #fca5a5', boxShadow: '0 4px 16px rgba(220,38,38,0.1)', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              <div style={{ background: '#fee2e2', borderRadius: 12, padding: '14px 18px', minWidth: 90, textAlign: 'center', flexShrink: 0 }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#dc2626' }}>{(item.overall_rating || 0).toFixed(1)}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#ef4444', letterSpacing: 1, textTransform: 'uppercase' }}>Overall</div>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
                   <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 10px', borderRadius: 20, fontWeight: 800, fontSize: 12 }}>🔴 Critical</span>
                   <span style={{ background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12 }}>🍽️ {item.meal_type}</span>
                   <span style={{ background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12 }}>📅 {item.feedback_date || '—'}</span>
                   <span style={{ color: '#94a3b8', fontSize: 12 }}>#{item.id}</span>
                 </div>
+
+                {/* New Metric Breakdown */}
+                <DetailedBreakdown row={item} />
                 {item.comments ? (
                   <div style={{ background: '#fff5f5', borderRadius: 10, padding: '10px 14px', borderLeft: '4px solid #ef4444' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>💬 Comment</div>
