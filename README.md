@@ -28,7 +28,7 @@ We have packed this system with every feature necessary for a true industry-leve
 2. Create a virtual environment: `python -m venv venv`
 3. Activate the virtual environment: `.\venv\Scripts\activate` (Windows)
 4. Install dependencies: `pip install -r requirements.txt`
-5. Run the server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+5. Run the server: `python run.py`
 
 #### Mobile App (React Native Expo)
 1. Navigate to the mobile app directory: `cd mobile-app`
@@ -178,7 +178,7 @@ To provide a complete academic understanding, here is a breakdown of every speci
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python run.py
 ```
 *(Note: `--host 0.0.0.0` ensures the server is accessible by mobile devices on the same Wi-Fi network).*
 
