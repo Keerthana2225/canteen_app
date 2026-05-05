@@ -3,7 +3,7 @@ schemas.py — Pydantic schemas for request validation and response serializatio
 
 Key rules:
   - meal_type: one of 5 allowed values (auto-detected by mobile app)
-  - If ANY individual rating = 1 → comments is mandatory
+  - If overall_rating (avg of all 5 ratings) ≤ 2 → comments is mandatory
   - overall_rating is computed server-side (not submitted by client)
   - is_critical = 1 when overall_rating < 2
 """
@@ -67,17 +67,39 @@ class FeedbackCreate(BaseModel):
     def clean_canteen_name(cls, v):
         return strip_emojis(v) if v else v
 
-    @validator("comments", always=True)
-    def comment_required_for_low_ratings(cls, v, values):
-        """
-        If ANY individual rating equals 1, a comment is mandatory.
-        This is enforced both client-side (mobile app) and server-side here.
-        """
-        rating_fields = ["food_quality", "food_taste", "food_hygiene", "staff_behavior", "cleanliness"]
-        any_low_rating = any(values.get(f, 5) <= 2 for f in rating_fields)
-        if any_low_rating and not v:
-            raise ValueError("A comment is required when any rating is 1 or 2 (Poor/Below Average).")
-        return v
+    # Old validation logic (disabled)
+    # Enforced comment when ANY individual rating was ≤ 2 (Poor / Below Average).
+    # Kept here for reference so it can be re-enabled if needed.
+    # @validator("comments", always=True)
+    # def comment_required_for_low_ratings(cls, v, values):
+    #     """
+    #     If ANY individual rating equals 1 or 2, a comment is mandatory.
+    #     This was enforced both client-side (mobile app) and server-side here.
+    #     """
+    #     rating_fields = ["food_quality", "food_taste", "food_hygiene", "staff_behavior", "cleanliness"]
+    #     any_low_rating = any(values.get(f, 5) <= 2 for f in rating_fields)
+    #     if any_low_rating and not v:
+    #         raise ValueError("A comment is required when any rating is 1 or 2 (Poor/Below Average).")
+    #     return v
+
+    # New validation logic (disabled) — comment mandatory when overall avg ≤ 2
+    # Re-enable in future by un-commenting the block below.
+    # @validator("comments", always=True)
+    # def comment_required_for_low_overall_rating(cls, v, values):
+    #     """
+    #     A comment is mandatory ONLY when the overall average rating (mean of all 5
+    #     individual ratings) is ≤ 2.  Individual low ratings alone no longer trigger
+    #     this requirement.
+    #     """
+    #     rating_fields = ["food_quality", "food_taste", "food_hygiene", "staff_behavior", "cleanliness"]
+    #     individual_ratings = [values.get(f) for f in rating_fields if values.get(f) is not None]
+    #     if individual_ratings:
+    #         overall_avg = sum(individual_ratings) / len(individual_ratings)
+    #         if overall_avg <= 2 and not v:
+    #             raise ValueError(
+    #                 "A comment is required when the overall average rating is 2 or below (≤ 2)."
+    #             )
+    #     return v
 
 
 # ─────────────────────────────────────────────

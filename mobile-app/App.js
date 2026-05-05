@@ -57,20 +57,20 @@ const TRANSLATIONS = {
     rateExperience: '⭐  Rate Your Experience',
     tapStars:       'Tap stars — watch the emoji react!',
     addComments:    '💬  Additional Comments',
-    commentRequired:'Comment is required when any rating is 1 or 2',
-    commentHint:    'Tell us what went wrong... (Required)',
-    commentOptional:'Any additional comments? (Optional)',
+    commentRequired:'Comment is required when overall average rating is 1 or 2',
+    commentHint:    'Enter comment (Optional)',
+    commentOptional:'Enter comment (Optional)',
     submit:         '✅  Submit Feedback',
     submitting:     '⏳  Submitting...',
     successTitle:   'Thank You!',
-    successSub:     'Your feedback has been\nsubmitted anonymously.',
+    successSub:     'Your feedback has been\nsubmitted successfully.',
     anonNote:       '🔒 No personal data collected',
     resetNote:      'Form resets in a few seconds...',
     footer:         '🔒 Your feedback is 100% anonymous and helps\nimprove our canteen services every day.',
     missingRatings: 'Missing Ratings',
     pleaseRate:     'Please rate all categories before submitting.',
     commentNeeded:  'Comment Required',
-    commentNeededMsg:'Please add a comment explaining the low rating (≤ 2).',
+    commentNeededMsg:'Please add a comment when the overall average rating is 2 or below (≤ 2).',
     connErr:        'Connection Error',
     connErrMsg:     'Backend not reachable.',
     logout:         'Logout',
@@ -82,6 +82,12 @@ const TRANSLATIONS = {
     food_hygiene:   'Food Hygiene',
     cleanliness:    'Cleanliness',
     staff_behavior: 'Staff Behavior',
+    // Meal type names (English — shown as-is)
+    'Breakfast':               'Breakfast',
+    'Lunch':                   'Lunch',
+    'Dinner':                  'Dinner',
+    'Midnight Supper':         'Midnight Supper',
+    'Early Morning Breakfast': 'Early Morning Breakfast',
   },
   ta: {
     headerTitle:    'கேன்டீன் கருத்து',
@@ -90,13 +96,13 @@ const TRANSLATIONS = {
     rateExperience: '⭐  உங்கள் அனுபவத்தை மதிப்பிடுங்கள்',
     tapStars:       'நட்சத்திரங்களை தொடுங்கள்!',
     addComments:    '💬  கூடுதல் கருத்துகள்',
-    commentRequired:'மதிப்பெண் 1 அல்லது 2 ஆக இருந்தால் கருத்து கட்டாயம்',
-    commentHint:    'என்ன தவறு நடந்தது? (கட்டாயம்)',
-    commentOptional:'கூடுதல் கருத்துகள்? (விருப்பம்)',
+    commentRequired:'ஒட்டுமொத்த சராசரி மதிப்பெண் 1 அல்லது 2 ஆக இருந்தால் கருத்து கட்டாயம்',
+    commentHint:    'கருத்து உள்ளிடுக (விருப்பத்தேர்வு)',
+    commentOptional:'கருத்து உள்ளிடுக (விருப்பத்தேர்வு)',
     submit:         '✅  கருத்தை சமர்ப்பி',
     submitting:     '⏳  சமர்ப்பிக்கிறது...',
     successTitle:   'நன்றி!',
-    successSub:     'உங்கள் கருத்து அநாமதேயமாக சமர்ப்பிக்கப்பட்டது.',
+    successSub:     'உங்கள் கருத்து சமர்ப்பிக்கப்பட்டது.',
     anonNote:       '🔒 தனிப்பட்ட தரவு சேகரிக்கப்படவில்லை',
     resetNote:      'சில நொடிகளில் படிவம் மீட்டமைக்கப்படும்...',
     footer:         '🔒 உங்கள் கருத்து 100% அநாமதேயமானது.',
@@ -115,6 +121,12 @@ const TRANSLATIONS = {
     food_hygiene:   'உணவு சுகாதாரம்',
     cleanliness:    'தூய்மை',
     staff_behavior: 'ஊழியர்களின் நடத்தை',
+    // Meal type names in Tamil
+    'Breakfast':               'காலை உணவு',
+    'Lunch':                   'மதிய உணவு',
+    'Dinner':                  'இரவு உணவு',
+    'Midnight Supper':         'நள்ளிரவு சிற்றுண்டி',
+    'Early Morning Breakfast': 'அதிகாலை காலை உணவு',
   },
 };
 
@@ -1133,10 +1145,14 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
 
-  const anyRatingIsLow = Object.values(ratings).some(v => v > 0 && v <= 2);
-  const commentRequired = anyRatingIsLow;
+  // Old validation logic (disabled) — comment was mandatory when ANY individual rating was ≤ 2
+  // const anyRatingIsLow = Object.values(ratings).some(v => v > 0 && v <= 2);
+  // const commentRequired = anyRatingIsLow;
+
+  // New validation logic — comment is mandatory ONLY when overall average rating is ≤ 2
   const overallAvg = Object.values(ratings).filter(v => v > 0).reduce((a, b) => a + b, 0) /
     (Object.values(ratings).filter(v => v > 0).length || 1);
+  const commentRequired = overallAvg > 0 && overallAvg <= 2;
   const isLowFeedback = overallAvg > 0 && overallAvg < 3;
 
   const showSuccess = () => {
@@ -1158,10 +1174,17 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
       Alert.alert(t('missingRatings'), t('pleaseRate'));
       return;
     }
-    if (commentRequired && !comments.trim()) {
-      Alert.alert(t('commentNeeded'), t('commentNeededMsg'));
-      return;
-    }
+    // Old validation logic (disabled) — blocked submit when ANY individual rating ≤ 2 and no comment
+    // if (commentRequired && !comments.trim()) {
+    //   Alert.alert(t('commentNeeded'), t('commentNeededMsg'));
+    //   return;
+    // }
+
+    // New validation logic (disabled) — comment mandatory when overall avg ≤ 2 (re-enable in future if needed)
+    // if (commentRequired && !comments.trim()) {
+    //   Alert.alert(t('commentNeeded'), t('commentNeededMsg'));
+    //   return;
+    // }
     setLoading(true);
     try {
       const res = await fetch(`${apiUrl}/feedback`, {
@@ -1196,7 +1219,7 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
           <Text style={s.successBigEmoji}>🎉</Text>
           <Text style={s.successTitle}>{t('successTitle')}</Text>
           <Text style={s.successSub}>{t('successSub')}</Text>
-          <View style={s.anonPill}><Text style={s.anonPillText}>{t('anonNote')}</Text></View>
+          {/* anonNote removed — 'No personal data collected' pill hidden */}
           <Text style={s.resetNote}>{t('resetNote')}</Text>
         </Animated.View>
       </View>
@@ -1242,11 +1265,10 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Text style={{ fontSize: 36 }}>{detectedMeal.emoji}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={[s.mealDetectLabel, { color: detectedMeal.color }]}>
-                  {t('mealDetected')}
-                </Text>
+                {/* mealDetected label removed — only emoji + meal name shown */}
                 <Text style={[s.mealDetectName, { color: detectedMeal.color }]}>
-                  {detectedMeal.label}
+                  {/* Use translated meal name if available (Tamil), else fall back to English label */}
+                  {t(detectedMeal.label) || detectedMeal.label}
                 </Text>
               </View>
               <View style={[s.mealDetectBadge, { backgroundColor: detectedMeal.color + '20', borderColor: detectedMeal.color }]}>
@@ -1274,34 +1296,64 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
 
           <OverallBar ratings={ratings} />
 
-          <View style={[s.card, commentRequired && { borderWidth: 2, borderColor: '#E53E3E' }]}>
+          {/* Old validation UI (disabled) — red border/banner shown when ANY individual rating ≤ 2 */}
+          {/* <View style={[s.card, commentRequired && { borderWidth: 2, borderColor: '#E53E3E' }]}> */}
+          {/*   <Text style={s.cardTitle}>{t('addComments')}</Text> */}
+          {/*   {commentRequired && ( */}
+          {/*     <View style={s.criticalBanner}> */}
+          {/*       <Text style={s.criticalBannerText}>{t('criticalAlert')}</Text> */}
+          {/*     </View> */}
+          {/*   )} */}
+          {/*   ... */}
+          {/* </View> */}
+
+          {/* Comment UI — comment is fully OPTIONAL in the UI.
+               Red border and criticalBanner are hidden/disabled below.
+               The backend still enforces a comment when overall avg ≤ 2,
+               but the UI shows no mandatory indicators to the user. */}
+
+          {/* Old comment UI with red border + criticalBanner (disabled) */}
+          {/* <View style={[s.card, commentRequired && { borderWidth: 2, borderColor: '#E53E3E' }]}> */}
+          {/*   <Text style={s.cardTitle}>{t('addComments')}</Text> */}
+          {/*   {commentRequired && ( */}
+          {/*     <View style={s.criticalBanner}> */}
+          {/*       <Text style={s.criticalBannerText}>{t('criticalAlert')}</Text> */}
+          {/*     </View> */}
+          {/*   )} */}
+          {/*   ... */}
+          {/* </View> */}
+
+          {/* New comment UI — fully optional appearance, no red border, no critical banner */}
+          <View style={s.card}>
             <Text style={s.cardTitle}>{t('addComments')}</Text>
-            {commentRequired && (
-              <View style={s.criticalBanner}>
-                <Text style={s.criticalBannerText}>{t('criticalAlert')}</Text>
-              </View>
-            )}
             <TextInput
-              style={[s.textarea, commentRequired && { borderColor: '#E53E3E', borderWidth: 2 }]}
+              style={s.textarea}
               multiline numberOfLines={4} maxLength={500}
-              placeholder={commentRequired ? t('commentHint') : t('commentOptional')}
-              placeholderTextColor={commentRequired ? '#E53E3E' : '#A0AEC0'}
+              placeholder={t('commentOptional')}
+              placeholderTextColor="#A0AEC0"
               value={comments} onChangeText={setComments} textAlignVertical="top"
             />
-            <Text style={[s.charCount, commentRequired && !comments.trim() && { color: '#E53E3E' }]}>
-              {comments.length} / 500 {commentRequired && !comments.trim() ? ' ⚠️ Required' : ''}
+            <Text style={s.charCount}>
+              {comments.length} / 500
             </Text>
           </View>
 
+          {/* Old submit button logic (disabled) — button went grey when comment was missing for low individual ratings */}
+          {/* <TouchableOpacity */}
+          {/*   style={[s.submitBtn, loading && s.submitOff, */}
+          {/*     commentRequired && !comments.trim() && { backgroundColor: '#9AE6B4' }]} */}
+          {/*   onPress={submit} disabled={loading} activeOpacity={0.85} */}
+          {/* > */}
+
+          {/* New submit button — only dims when loading; no grey-out for missing optional comment */}
           <TouchableOpacity
-            style={[s.submitBtn, loading && s.submitOff,
-              commentRequired && !comments.trim() && { backgroundColor: '#9AE6B4' }]}
+            style={[s.submitBtn, loading && s.submitOff]}
             onPress={submit} disabled={loading} activeOpacity={0.85}
           >
             <Text style={s.submitText}>{loading ? t('submitting') : t('submit')}</Text>
           </TouchableOpacity>
 
-          <Text style={s.footer}>{t('footer')}</Text>
+          {/* footer text removed */}
           <View style={{ height: 32 }} />
         </ScrollView>
       </KeyboardAvoidingView>
