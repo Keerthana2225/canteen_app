@@ -8,7 +8,7 @@ We have packed this system with every feature necessary for a true industry-leve
 *   **Intelligent Rating Validation**: A 1-to-5 star rating system across 5 key metrics. If any category receives a '1', the system mandates a written comment.
 *   **Critical Feedback Highlighting**: Automatically detects and flags feedback as "Critical" when the overall average rating is less than or equal to 2 (`overall_rating <= 2`).
 *   **Continuous Auto Meal Detection**: The system covers a 24-hour cycle by checking the tablet's local system clock. It automatically assigns the exact meal without manual user input (Breakfast: 6am-11am, Lunch: 11am-7pm, Dinner: 7pm-11pm, Midnight Supper: 11pm-1:30am, Early Morning: 1:30am-6am).
-*   **Web Dashboard Analytics**: Visual representation of data through Recharts graphs and KPIs, providing day-wise, month-wise, and all-time reporting.
+*   **Enterprise Web Dashboard**: A sleek, professional, high-density React dashboard featuring deep corporate blue aesthetics, unified Excel reporting directly integrated into date filters, and clean KPI charts using Recharts.
 *   **Mobile Admin Dashboard**: A built-in, hidden admin screen right on the tablet kiosk. Designed in a "Premium Light Mode" with soft floating shadows, it allows local managers to check stats without needing a PC.
 *   **Native Excel Exports (.xlsx)**: Both the Web Dashboard and Mobile App can generate and download native Excel reports. The backend (using `openpyxl`) intelligently color-codes critical rows **red** directly inside the downloaded Excel file!
 *   **Dynamic Data Filtering**: Admins can filter reports by specific dates, specific months, or specific meal types to compare performance.

@@ -5,29 +5,29 @@ import axios from 'axios';
 const API = `http://${window.location.hostname}:8000`;
 
 function MetricBadge({ label, icon, value }) {
-  const color = value <= 2 ? '#ef4444' : value <= 3 ? '#f59e0b' : '#10b981';
-  const bg = value <= 2 ? '#fee2e2' : value <= 3 ? '#fffbeb' : '#ecfdf5';
+  const color = value <= 2 ? 'var(--danger)' : value <= 3 ? 'var(--secondary)' : 'var(--success)';
+  const bg = value <= 2 ? 'var(--danger-light)' : value <= 3 ? 'var(--secondary-light)' : 'var(--success-light)';
   return (
     <div title={label} style={{ 
       display: 'flex', alignItems: 'center', gap: 6, background: bg, color: color, 
-      padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800,
-      border: `1px solid ${color}33`
+      padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+      border: `1px solid rgba(0, 0, 0, 0.02)`
     }}>
-      <span style={{ fontSize: 14 }}>{icon}</span>
+
       <span>{value}</span>
-      <span style={{ fontSize: 10, opacity: 0.7, fontWeight: 600, marginLeft: 2 }}>{label}</span>
+      <span style={{ fontSize: 10, opacity: 0.8, fontWeight: 600, marginLeft: 2 }}>{label}</span>
     </div>
   );
 }
 
 function DetailedBreakdown({ row }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-      <MetricBadge label="Quality" icon="🏆" value={row.food_quality} />
-      <MetricBadge label="Taste" icon="🍽️" value={row.food_taste} />
-      <MetricBadge label="Hygiene" icon="🧼" value={row.food_hygiene} />
-      <MetricBadge label="Staff" icon="👤" value={row.staff_behavior} />
-      <MetricBadge label="Clean" icon="✨" value={row.cleanliness} />
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12, marginBottom: 16 }}>
+      <MetricBadge label="Qual" value={row.food_quality} />
+      <MetricBadge label="Taste" value={row.food_taste} />
+      <MetricBadge label="Hygiene" value={row.food_hygiene} />
+      <MetricBadge label="Staff" value={row.staff_behavior} />
+      <MetricBadge label="Clean" value={row.cleanliness} />
     </div>
   );
 }
@@ -56,75 +56,105 @@ export default function Critical() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const inputStyle = { border: '1px solid #fca5a5', borderRadius: 10, padding: '9px 14px', color: '#7f1d1d', background: '#fff5f5', fontSize: 14, outline: 'none' };
-
   return (
     <Layout title="Critical Feedback" subtitle="All entries with overall rating below 2.0">
-      {/* Alert banner */}
-      <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #b91c1c)', borderRadius: 16, padding: '20px 28px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      
+      {/* Soft Red Elegant Alert Banner */}
+      <div style={{ 
+        background: 'var(--danger-light)', 
+        border: '1px solid var(--danger-border)', 
+        borderRadius: 'var(--radius-card)', 
+        padding: '24px 32px', 
+        marginBottom: 28, 
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        boxShadow: 'var(--shadow-sm)'
+      }}>
         <div>
-          <div style={{ color: '#fca5a5', fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>⚠️ Urgent Attention Required</div>
-          <div style={{ color: '#fff', fontSize: 24, fontWeight: 900, marginTop: 4 }}>{loading ? '...' : data.length} Critical Feedback {data.length === 1 ? 'Entry' : 'Entries'}</div>
-          <div style={{ color: '#fca5a5', fontSize: 13, marginTop: 4 }}>Overall rating &lt; 2.0 — immediate action needed</div>
+          <div style={{ color: 'var(--danger)', fontSize: 11, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>Urgent Attention Required</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 800, marginTop: 4 }}>{loading ? '...' : data.length} Critical Feedback {data.length === 1 ? 'Entry' : 'Entries'}</div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4, fontWeight: 500 }}>Overall rating &lt; 2.0 — immediate action needed</div>
         </div>
-        <div style={{ fontSize: 64, opacity: 0.7 }}>🔴</div>
       </div>
 
-      {/* Filters */}
-      <div style={{ background: '#fff', borderRadius: 16, padding: '16px 24px', display: 'flex', gap: 16, alignItems: 'flex-end', border: '1px solid #fecaca', marginBottom: 24, flexWrap: 'wrap' }}>
+      {/* Filters (Floating Box) */}
+      <div className="dashboard-card" style={{ 
+        display: 'flex', gap: 16, alignItems: 'flex-end', 
+        marginBottom: 28, flexWrap: 'wrap',
+        background: '#ffffff'
+      }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 6, textTransform: 'uppercase' }}>Meal Type</div>
-          <select value={mealFilter} onChange={e => setMealFilter(e.target.value)} style={{ ...inputStyle, minWidth: 180 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase' }}>Meal Type</div>
+          <select value={mealFilter} onChange={e => setMealFilter(e.target.value)} className="custom-select" style={{ minWidth: 180 }}>
             <option value="">All Meals</option>
             {MEAL_TYPES.map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 6, textTransform: 'uppercase' }}>From Date</div>
-          <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inputStyle} />
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase' }}>From Date</div>
+          <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="custom-input" />
         </div>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 6, textTransform: 'uppercase' }}>To Date</div>
-          <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} style={inputStyle} />
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase' }}>To Date</div>
+          <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="custom-input" />
         </div>
-        <button onClick={fetchData} style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Filter</button>
-        <button onClick={() => { setFromDate(''); setToDate(''); setMealFilter(''); }} style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '10px 20px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Reset</button>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+          <button onClick={fetchData} className="btn-primary" style={{ background: 'var(--danger)', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.15)' }}>
+            Filter
+          </button>
+          <button onClick={() => { setFromDate(''); setToDate(''); setMealFilter(''); }} className="btn-secondary">
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Cards */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#dc2626', fontSize: 16 }}>Loading critical feedback...</div>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--danger)', fontSize: 15, fontWeight: 600 }}>Loading critical feedback...</div>
       ) : data.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: 64 }}>✅</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#10b981', marginTop: 16 }}>No Critical Feedback!</div>
-          <div style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>All feedback scores are above 2.0</div>
+        <div style={{ textAlign: 'center', padding: '60px 0', background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>No Critical Feedback</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, fontWeight: 500 }}>All feedback scores are currently above 2.0</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {data.map((item, i) => (
-            <div key={i} style={{ background: '#fff', borderRadius: 16, padding: 24, border: '2px solid #fca5a5', boxShadow: '0 4px 16px rgba(220,38,38,0.1)', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-              <div style={{ background: '#fee2e2', borderRadius: 12, padding: '14px 18px', minWidth: 90, textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontSize: 28, fontWeight: 900, color: '#dc2626' }}>{(item.overall_rating || 0).toFixed(1)}</div>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#ef4444', letterSpacing: 1, textTransform: 'uppercase' }}>Overall</div>
+            <div key={i} className="dashboard-card" style={{ 
+              background: '#ffffff', 
+              padding: 24, 
+              border: '1px solid var(--danger-border)', 
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex', gap: 20, alignItems: 'flex-start' 
+            }}>
+              <div style={{ 
+                background: 'var(--danger-light)', 
+                borderRadius: 12, 
+                padding: '14px 18px', 
+                minWidth: 90, 
+                textAlign: 'center', 
+                flexShrink: 0,
+                border: '1px solid var(--danger-border)' 
+              }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--danger)' }}>{(item.overall_rating || 0).toFixed(1)}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 2 }}>Overall</div>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-                  <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 10px', borderRadius: 20, fontWeight: 800, fontSize: 12 }}>🔴 Critical</span>
-                  <span style={{ background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12 }}>🍽️ {item.meal_type}</span>
-                  <span style={{ background: '#f1f5f9', color: '#475569', padding: '3px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12 }}>📅 {item.feedback_date || '—'}</span>
-                  <span style={{ color: '#94a3b8', fontSize: 12 }}>#{item.id}</span>
+                  <span style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 12 }}>Critical Alert</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 12 }}>{item.meal_type}</span>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: 12 }}>{item.feedback_date || '—'}</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12, marginLeft: 'auto', fontWeight: 500 }}>#{item.id}</span>
                 </div>
 
-                {/* New Metric Breakdown */}
+                {/* Metric Breakdown */}
                 <DetailedBreakdown row={item} />
+                
                 {item.comments ? (
-                  <div style={{ background: '#fff5f5', borderRadius: 10, padding: '10px 14px', borderLeft: '4px solid #ef4444' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>💬 Comment</div>
-                    <div style={{ fontSize: 14, color: '#1e293b', lineHeight: 1.6 }}>"{item.comments}"</div>
+                  <div style={{ background: 'var(--danger-light)', borderRadius: 12, padding: '14px 18px', borderLeft: '4px solid var(--danger)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--danger)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>💬 Comment</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6, fontStyle: 'italic', fontWeight: 500 }}>"{item.comments}"</div>
                   </div>
                 ) : (
-                  <div style={{ color: '#94a3b8', fontSize: 13, fontStyle: 'italic' }}>No comment provided</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 13, fontStyle: 'italic', paddingLeft: 4 }}>No comment provided</div>
                 )}
               </div>
             </div>

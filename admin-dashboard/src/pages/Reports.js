@@ -98,84 +98,105 @@ export default function Reports() {
     { id: 'critical', label: `🔴 Critical Report (${critData.length})` },
   ];
 
-  const inputStyle = { border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 12px', color: '#0f172a', background: '#f8fafc', fontSize: 13, outline: 'none' };
-  const labelStyle = { fontSize: 10, fontWeight: 700, color: '#64748b', marginBottom: 5, textTransform: 'uppercase' };
-  const btnStyle   = { background: '#1a56db', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13 };
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase' };
 
   return (
     <Layout title="Reports" subtitle="Day-wise, Meal-wise, and Critical feedback reports">
 
-      {/* ── Quick Export Bar ── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', background: '#fff', padding: '12px 20px', borderRadius: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginRight: 8 }}>📥 Quick Export:</div>
-        <button onClick={() => {
-          const d = new Date().toISOString().slice(0, 10);
-          handleExport(`from_date=${d}&to_date=${d}`);
-        }} style={{ ...btnStyle, background: '#10b981', display: 'flex', alignItems: 'center', gap: 6 }}>
-          Today's Data
-        </button>
-        <button onClick={() => {
-          const d = new Date();
-          const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
-          const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
-          handleExport(`from_date=${firstDay}&to_date=${lastDay}`);
-        }} style={{ ...btnStyle, background: '#3b82f6', display: 'flex', alignItems: 'center', gap: 6 }}>
-          This Month
-        </button>
-        <button onClick={() => handleExport()} style={{ ...btnStyle, background: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
-          Overall Data
-        </button>
-      </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', padding: 6, borderRadius: 14, marginBottom: 28, width: 'fit-content' }}>
-        {TABS.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-            padding: '10px 22px', borderRadius: 10, border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-            background: activeTab === tab.id ? '#fff' : 'transparent',
-            color: activeTab === tab.id ? (tab.id === 'critical' ? '#dc2626' : '#1a56db') : '#64748b',
-            boxShadow: activeTab === tab.id ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-            transition: 'all 0.15s',
-          }}>{tab.label}</button>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+        {/* iOS-Style Capsule Tabs */}
+        <div style={{ 
+          display: 'flex', gap: 4, 
+          background: 'var(--border-light)', 
+          padding: 5, borderRadius: 14, 
+          border: '1px solid var(--border-color)'
+        }}>
+          {TABS.map(tab => {
+            const active = activeTab === tab.id;
+            let activeColor = 'var(--primary)';
+            if (tab.id === 'critical') activeColor = 'var(--danger)';
+
+            return (
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                className="smooth-transition"
+                style={{
+                  padding: '8px 20px', borderRadius: 10, border: 'none', 
+                  fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  background: active ? '#ffffff' : 'transparent',
+                  color: active ? activeColor : 'var(--text-secondary)',
+                  boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+        
+        <button onClick={() => handleExport()} className="btn-secondary" style={{ color: 'var(--primary)', borderColor: 'var(--primary)', fontWeight: 700, boxShadow: 'var(--shadow-sm)' }}>
+          📥 Export Overall Data
+        </button>
       </div>
 
       {/* ── Day-wise Tab ── */}
       {activeTab === 'day' && (
         <>
-          <div style={{ background: '#fff', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-end', border: '1px solid #e2e8f0', marginBottom: 20, flexWrap: 'wrap' }}>
-            <div><div style={labelStyle}>From Date</div><input type="date" value={dayFrom} onChange={e => setDayFrom(e.target.value)} style={inputStyle} /></div>
-            <div><div style={labelStyle}>To Date</div><input type="date" value={dayTo} onChange={e => setDayTo(e.target.value)} style={inputStyle} /></div>
-            <button onClick={handleDayApply} style={btnStyle}>Apply</button>
-            <button onClick={() => { setDayFrom(''); setDayTo(''); setTimeout(fetchDay, 0); }} style={{ ...btnStyle, background: '#f1f5f9', color: '#475569' }}>Reset</button>
+          <div className="dashboard-card" style={{ 
+            display: 'flex', gap: 14, alignItems: 'flex-end', 
+            marginBottom: 24, flexWrap: 'wrap', background: '#ffffff' 
+          }}>
+            <div><div style={labelStyle}>From Date</div><input type="date" value={dayFrom} onChange={e => setDayFrom(e.target.value)} className="custom-input" /></div>
+            <div><div style={labelStyle}>To Date</div><input type="date" value={dayTo} onChange={e => setDayTo(e.target.value)} className="custom-input" /></div>
+            <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+              <button onClick={() => {
+                if (!dayFrom || !dayTo) { alert("Please select 'From Date' and 'To Date' first."); return; }
+                handleExport(`from_date=${dayFrom}&to_date=${dayTo}`);
+              }} className="btn-secondary" style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                📥 Export Excel
+              </button>
+              <button onClick={handleDayApply} className="btn-primary">Apply</button>
+              <button onClick={() => { setDayFrom(''); setDayTo(''); setTimeout(fetchDay, 0); }} className="btn-secondary">Reset</button>
+            </div>
           </div>
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          
+          <div className="dashboard-card" style={{ padding: 0, overflow: 'hidden', background: '#ffffff', border: '1px solid var(--border-color)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--border-light)', borderBottom: '1px solid var(--border-color)' }}>
                   {['Date','Total Responses','Critical','Avg Rating','Status'].map(h => (
-                    <th key={h} style={{ padding: '12px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                    <th key={h} style={{ padding: '16px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={5} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>Loading...</td></tr>
+                  <tr><td colSpan={5} style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Loading...</td></tr>
                 ) : dayData.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>No data found</td></tr>
+                  <tr><td colSpan={5} style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>No data found</td></tr>
                 ) : dayData.map((d, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: d.critical > 0 ? '#fff5f5' : 'transparent' }}>
-                    <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0f172a' }}>{d.date}</td>
-                    <td style={{ padding: '12px 20px', fontWeight: 700, color: '#1a56db', fontSize: 16 }}>{d.total}</td>
-                    <td style={{ padding: '12px 20px' }}>
+                  <tr key={i} className="smooth-transition" style={{ 
+                    borderBottom: '1px solid var(--border-light)', 
+                    borderLeft: d.critical > 0 ? '3px solid var(--danger)' : '3px solid transparent',
+                    background: 'transparent'
+                  }}>
+                    <td style={{ padding: '16px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>{d.date}</td>
+                    <td style={{ padding: '16px 20px', fontWeight: 800, color: 'var(--primary)', fontSize: 15 }}>{d.total}</td>
+                    <td style={{ padding: '16px 20px' }}>
                       {d.critical > 0
-                        ? <span style={{ background: '#fee2e2', color: '#dc2626', padding: '3px 10px', borderRadius: 12, fontWeight: 700 }}>🔴 {d.critical}</span>
-                        : <span style={{ color: '#10b981', fontWeight: 700 }}>✅ 0</span>}
+                        ? <span className="status-badge danger" style={{ padding: '2px 8px', borderRadius: '4px' }}>{d.critical} Critical</span>
+                        : <span className="status-badge success" style={{ padding: '2px 8px', borderRadius: '4px' }}>0</span>}
                     </td>
-                    <td style={{ padding: '12px 20px', fontWeight: 800, fontSize: 15, color: scoreColor(d.avg_rating) }}>⭐ {d.avg_rating}</td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <span style={{ background: d.avg_rating >= 4 ? '#dcfce7' : d.avg_rating >= 3 ? '#fef9c3' : '#fee2e2', color: scoreColor(d.avg_rating), padding: '3px 12px', borderRadius: 20, fontWeight: 700, fontSize: 12 }}>
-                        {d.avg_rating >= 4 ? '🟢 Good' : d.avg_rating >= 3 ? '🟡 Average' : '🔴 Poor'}
+                    <td style={{ padding: '16px 20px', fontWeight: 800, fontSize: 14, color: scoreColor(d.avg_rating) }}>{d.avg_rating}</td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <span className="status-badge" style={{ 
+                        background: d.avg_rating >= 4 ? 'var(--success-light)' : d.avg_rating >= 3 ? 'var(--secondary-light)' : 'var(--danger-light)', 
+                        color: scoreColor(d.avg_rating), 
+                        padding: '4px 12px' 
+                      }}>
+                        {d.avg_rating >= 4 ? 'Good' : d.avg_rating >= 3 ? 'Average' : 'Poor'}
                       </span>
                     </td>
                   </tr>
@@ -189,24 +210,40 @@ export default function Reports() {
       {/* ── Meal-wise Tab ── */}
       {activeTab === 'meal' && (
         <>
-          <div style={{ background: '#fff', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-end', border: '1px solid #e2e8f0', marginBottom: 20, flexWrap: 'wrap' }}>
-            <div><div style={labelStyle}>From Date</div><input type="date" value={mealFrom} onChange={e => setMealFrom(e.target.value)} style={inputStyle} /></div>
-            <div><div style={labelStyle}>To Date</div><input type="date" value={mealTo} onChange={e => setMealTo(e.target.value)} style={inputStyle} /></div>
-            <button onClick={handleMealApply} style={btnStyle}>Apply</button>
-            <button onClick={() => { setMealFrom(''); setMealTo(''); setTimeout(fetchMeal, 0); }} style={{ ...btnStyle, background: '#f1f5f9', color: '#475569' }}>Reset</button>
+          <div className="dashboard-card" style={{ 
+            display: 'flex', gap: 14, alignItems: 'flex-end', 
+            marginBottom: 24, flexWrap: 'wrap', background: '#ffffff' 
+          }}>
+            <div><div style={labelStyle}>From Date</div><input type="date" value={mealFrom} onChange={e => setMealFrom(e.target.value)} className="custom-input" /></div>
+            <div><div style={labelStyle}>To Date</div><input type="date" value={mealTo} onChange={e => setMealTo(e.target.value)} className="custom-input" /></div>
+            <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+              <button onClick={() => {
+                if (!mealFrom || !mealTo) { alert("Please select 'From Date' and 'To Date' first."); return; }
+                handleExport(`from_date=${mealFrom}&to_date=${mealTo}`);
+              }} className="btn-secondary" style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                📥 Export Excel
+              </button>
+              <button onClick={handleMealApply} className="btn-primary">Apply</button>
+              <button onClick={() => { setMealFrom(''); setMealTo(''); setTimeout(fetchMeal, 0); }} className="btn-secondary">Reset</button>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-            {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Loading...</div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+            {loading ? <div style={{ color: 'var(--text-secondary)', padding: 20, fontWeight: 600 }}>Loading...</div>
             : mealData.map((m, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: 14, padding: 20, border: '1px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+              <div key={i} className="dashboard-card" style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>{m.meal_type}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{m.total} responses</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{m.meal_type}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, fontWeight: 500 }}>{m.total} responses</div>
                   </div>
-                  {m.critical > 0 && <span style={{ background: '#fee2e2', color: '#dc2626', padding: '3px 10px', borderRadius: 20, fontWeight: 800, fontSize: 11 }}>🔴 {m.critical} critical</span>}
+                  {m.critical > 0 && <span className="status-badge danger" style={{ padding: '2px 8px', fontSize: 10, borderRadius: '4px' }}>{m.critical} critical</span>}
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 900, color: scoreColor(m.avg_overall), marginBottom: 8 }}>⭐ {m.avg_overall}</div>
+                
+                <div style={{ fontSize: 26, fontWeight: 800, color: scoreColor(m.avg_overall), display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0' }}>
+                  <span>{m.avg_overall}</span>
+                </div>
+                
                 {[
                   { label: 'Quality',  val: m.avg_food_quality },
                   { label: 'Taste',    val: m.avg_food_taste },
@@ -214,12 +251,13 @@ export default function Reports() {
                   { label: 'Staff',    val: m.avg_staff_behavior },
                   { label: 'Clean',    val: m.avg_cleanliness },
                 ].map(c => (
-                  <div key={c.label} style={{ marginBottom: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontSize: 12, color: '#64748b', fontWeight: 600 }}>
-                      <span>{c.label}</span><span style={{ fontWeight: 800, color: scoreColor(c.val) }}>{c.val}</span>
+                  <div key={c.label} style={{ marginBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      <span>{c.label}</span>
+                      <span style={{ fontWeight: 800, color: scoreColor(c.val) }}>{c.val}</span>
                     </div>
-                    <div style={{ height: 5, background: '#f1f5f9', borderRadius: 5 }}>
-                      <div style={{ height: 5, borderRadius: 5, width: `${(c.val / 5) * 100}%`, background: scoreColor(c.val) }} />
+                    <div style={{ height: 6, background: 'var(--border-light)', borderRadius: 5, overflow: 'hidden' }}>
+                      <div className="smooth-transition" style={{ height: '100%', borderRadius: 5, width: `${(c.val / 5) * 100}%`, background: scoreColor(c.val) }} />
                     </div>
                   </div>
                 ))}
@@ -232,43 +270,62 @@ export default function Reports() {
       {/* ── Critical Tab ── */}
       {activeTab === 'critical' && (
         <>
-          <div style={{ background: '#fff5f5', borderRadius: 14, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-end', border: '1px solid #fecaca', marginBottom: 20, flexWrap: 'wrap' }}>
+          <div className="dashboard-card" style={{ 
+            display: 'flex', gap: 14, alignItems: 'flex-end', 
+            marginBottom: 24, flexWrap: 'wrap', background: 'var(--danger-light)', 
+            border: '1px solid var(--danger-border)' 
+          }}>
             <div>
-              <div style={{ ...labelStyle, color: '#dc2626' }}>Meal Type</div>
-              <select value={critMeal} onChange={e => setCritMeal(e.target.value)} style={{ ...inputStyle, borderColor: '#fca5a5', background: '#fff5f5', color: '#7f1d1d', minWidth: 180 }}>
+              <div style={{ ...labelStyle, color: 'var(--danger)' }}>Meal Type</div>
+              <select value={critMeal} onChange={e => setCritMeal(e.target.value)} className="custom-select" style={{ borderColor: 'var(--danger-border)', background: '#ffffff', minWidth: 180 }}>
                 <option value="">All Meals</option>
                 {MEAL_TYPES_ALL.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
-            <div><div style={{ ...labelStyle, color: '#dc2626' }}>From</div><input type="date" value={critFrom} onChange={e => setCritFrom(e.target.value)} style={{ ...inputStyle, borderColor: '#fca5a5', background: '#fff5f5', color: '#7f1d1d' }} /></div>
-            <div><div style={{ ...labelStyle, color: '#dc2626' }}>To</div><input type="date" value={critTo} onChange={e => setCritTo(e.target.value)} style={{ ...inputStyle, borderColor: '#fca5a5', background: '#fff5f5', color: '#7f1d1d' }} /></div>
-            <button onClick={handleCritApply} style={{ ...btnStyle, background: '#dc2626' }}>Apply</button>
-            <button onClick={() => { setCritMeal(''); setCritFrom(''); setCritTo(''); setTimeout(fetchCrit, 0); }} style={{ ...btnStyle, background: '#fee2e2', color: '#991b1b' }}>Reset</button>
+            <div><div style={{ ...labelStyle, color: 'var(--danger)' }}>From Date</div><input type="date" value={critFrom} onChange={e => setCritFrom(e.target.value)} className="custom-input" style={{ borderColor: 'var(--danger-border)' }} /></div>
+            <div><div style={{ ...labelStyle, color: 'var(--danger)' }}>To Date</div><input type="date" value={critTo} onChange={e => setCritTo(e.target.value)} className="custom-input" style={{ borderColor: 'var(--danger-border)' }} /></div>
+            <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+              <button onClick={() => {
+                if (!critFrom || !critTo) { alert("Please select 'From Date' and 'To Date' first."); return; }
+                handleExport(`from_date=${critFrom}&to_date=${critTo}`);
+              }} className="btn-secondary" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                📥 Export Excel
+              </button>
+              <button onClick={handleCritApply} className="btn-primary" style={{ background: 'var(--danger)', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.15)' }}>Apply</button>
+              <button onClick={() => { setCritMeal(''); setCritFrom(''); setCritTo(''); setTimeout(fetchCrit, 0); }} className="btn-secondary">Reset</button>
+            </div>
           </div>
-          {loading ? <div style={{ textAlign: 'center', padding: '40px 0', color: '#dc2626' }}>Loading...</div>
-          : critData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 0', background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 56 }}>✅</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981', marginTop: 12 }}>No Critical Feedback Found</div>
+          
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--danger)', fontWeight: 600 }}>Loading...</div>
+          ) : critData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '80px 0', background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--success)', marginTop: 16 }}>No Critical Feedback Found</div>
             </div>
           ) : (
-            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div className="dashboard-card" style={{ padding: 0, overflow: 'hidden', background: '#ffffff', border: '1px solid var(--border-color)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#fff5f5' }}>
+                  <tr style={{ background: 'var(--danger-light)', borderBottom: '1px solid var(--danger-border)' }}>
                     {['#','Date','Meal','Rating','Comment'].map(h => (
-                      <th key={h} style={{ padding: '12px 18px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', borderBottom: '1px solid #fecaca' }}>{h}</th>
+                      <th key={h} style={{ padding: '16px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {critData.map((row, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #fef2f2', background: i % 2 === 0 ? '#fff' : '#fff5f5' }}>
-                      <td style={{ padding: '12px 18px', color: '#94a3b8', fontWeight: 600 }}>#{row.id}</td>
-                      <td style={{ padding: '12px 18px', fontWeight: 700, color: '#0f172a' }}>{row.feedback_date || '—'}</td>
-                      <td style={{ padding: '12px 18px' }}><span style={{ background: '#f1f5f9', padding: '3px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12, color: '#334155' }}>{row.meal_type}</span></td>
-                      <td style={{ padding: '12px 18px', fontWeight: 900, fontSize: 16, color: '#dc2626' }}>⭐ {(row.overall_rating || 0).toFixed(1)}</td>
-                      <td style={{ padding: '12px 18px', maxWidth: 320, color: '#334155', fontSize: 13 }}>{row.comments ? `"${row.comments}"` : <span style={{ color: '#cbd5e1', fontStyle: 'italic' }}>—</span>}</td>
+                    <tr key={i} className="smooth-transition" style={{ borderBottom: '1px solid var(--border-light)', borderLeft: '3px solid var(--danger)', background: '#ffffff' }}>
+                      <td style={{ padding: '16px 20px', color: 'var(--text-secondary)', fontWeight: 700 }}>#{row.id}</td>
+                      <td style={{ padding: '16px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>{row.feedback_date || '—'}</td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ background: 'var(--border-light)', padding: '4px 10px', borderRadius: 4, fontWeight: 700, fontSize: 12, color: 'var(--text-primary)', border: '1px solid rgba(0,0,0,0.02)' }}>{row.meal_type}</span>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontWeight: 800, fontSize: 14, color: 'var(--danger)' }}>
+                        { (row.overall_rating || 0).toFixed(1) }
+                      </td>
+                      <td style={{ padding: '16px 20px', maxWidth: 320, color: 'var(--text-primary)', fontStyle: 'italic', fontWeight: 500 }}>
+                        {row.comments ? `"${row.comments}"` : <span style={{ color: '#cbd5e1', fontStyle: 'italic' }}>—</span>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
