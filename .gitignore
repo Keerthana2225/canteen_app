@@ -31,7 +31,7 @@ backend/.env
 # ── React Native / Expo Mobile App ───────────────────────────
 mobile-app/node_modules/
 mobile-app/.expo/
-mobile-app/android/
+
 mobile-app/ios/
 mobile-app/.expo-shared/
 mobile-app/dist/
