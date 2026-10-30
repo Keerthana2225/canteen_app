@@ -11,7 +11,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.canteen.feedback",
       "versionCode": 1,
@@ -21,8 +23,9 @@
     "web": {},
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id-here"
+        "projectId": "426fa7df-dae9-44b8-a831-2d2a490698e3"
       }
-    }
+    },
+    "owner": "keerthana-2525"
   }
 }

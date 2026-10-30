@@ -8,8 +8,8 @@ const CATS = [
   { key: 'avg_food_quality',   label: 'Food Quality',   icon: '🍱', color: '#3b82f6' }, // blue
   { key: 'avg_food_taste',     label: 'Food Taste',     icon: '😋', color: '#8b5cf6' }, // violet
   { key: 'avg_food_hygiene',   label: 'Food Hygiene',   icon: '🧼', color: '#06b6d4' }, // cyan
-  { key: 'avg_cleanliness',    label: 'Cleanliness',    icon: '✨', color: '#10b981' }, // emerald
-  { key: 'avg_staff_behavior', label: 'Staff Behavior', icon: '👨‍🍳', color: '#f59e0b' }, // amber
+  { key: 'avg_cleanliness',    altKey: 'avg_hospitality', label: 'Cleanliness',  icon: '✨', color: '#10b981' }, // emerald
+  { key: 'avg_staff_behavior', altKey: 'avg_today_menu',   label: "Today's Menu", icon: '🍽️', color: '#f59e0b' }, // amber
 ];
 
 const MEAL_META = [
@@ -24,8 +24,9 @@ const scoreColor = v => v >= 4 ? 'var(--success)' : v >= 3 ? 'var(--secondary)' 
 
 
 function StatCard({ icon, label, value, color, loading }) {
-  const val = parseFloat(value) || 0;
-  const pct = (val / 5) * 100;
+  const hasVal = value !== undefined && value !== null && !isNaN(value);
+  const val = hasVal ? parseFloat(value) : null;
+  const pct = val !== null ? (val / 5) * 100 : 0;
   return (
     <div className="dashboard-card" style={{
       display: 'flex',
@@ -48,7 +49,7 @@ function StatCard({ icon, label, value, color, loading }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>{label}</div>
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>
-          {loading ? '—' : val.toFixed(1)}
+          {loading ? '—' : val !== null ? val.toFixed(1) : '—'}
           <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 500, marginLeft: 2 }}>/ 5</span>
         </div>
       </div>
@@ -85,7 +86,7 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const overall = summary ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length : 0;
+  const overall = summary ? CATS.map(c => (summary[c.key] ?? summary[c.altKey]) || 0).reduce((a, b) => a + b, 0) / CATS.length : 0;
   const mealCounts = {};
   MEAL_META.forEach(m => { mealCounts[m.label] = 0; });
   feedback.forEach(r => { if (mealCounts[r.meal_type] !== undefined) mealCounts[r.meal_type]++; });
@@ -165,8 +166,8 @@ export default function Dashboard() {
 
           {/* Quick Category Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {CATS.slice(0, 3).map(c => <StatCard key={c.key} icon={c.icon} label={c.label} value={summary?.[c.key]} color={c.color} loading={loading} />)}
-            {CATS.slice(3, 5).map(c => <StatCard key={c.key} icon={c.icon} label={c.label} value={summary?.[c.key]} color={c.color} loading={loading} />)}
+            {CATS.slice(0, 3).map(c => <StatCard key={c.key} icon={c.icon} label={c.label} value={summary?.[c.key] ?? summary?.[c.altKey]} color={c.color} loading={loading} />)}
+            {CATS.slice(3, 5).map(c => <StatCard key={c.key} icon={c.icon} label={c.label} value={summary?.[c.key] ?? summary?.[c.altKey]} color={c.color} loading={loading} />)}
             
             {/* Best Category Highlight */}
             {summary && summary.total_count > 0 && (
@@ -258,7 +259,9 @@ export default function Dashboard() {
                 <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14 }}>No feedback found.</div>
               ) : (
                 recent.map((r, i) => {
-                  const avg = ((r.food_quality + r.food_taste + r.food_hygiene + r.cleanliness + r.staff_behavior) / 5).toFixed(1);
+                  const clean = r.cleanliness ?? r.hospitality ?? 0;
+                  const menu = r.staff_behavior ?? r.today_menu ?? 0;
+                  const avg = ((r.food_quality + r.food_taste + r.food_hygiene + clean + menu) / 5).toFixed(1);
                   const sColor = scoreColor(parseFloat(avg));
                   const isCrit = r.is_critical === 1;
                   return (

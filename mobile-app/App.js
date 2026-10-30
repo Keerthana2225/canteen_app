@@ -12,9 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 // ── Constants ─────────────────────────────────────────────────
 import CONFIG from './config';
-const STORAGE_KEY = '@canteen_server_url';
-const DEFAULT_PORT = '8000';
-const API_URL = CONFIG.API_URL; // Initial default from config
+const API_URL = CONFIG.API_URL;
 
 // Hardcoded credentials (no backend auth needed)
 const USERS = {
@@ -81,7 +79,8 @@ const TRANSLATIONS = {
     food_taste:     'Food Taste',
     food_hygiene:   'Food Hygiene',
     cleanliness:    'Cleanliness',
-    staff_behavior: 'Staff Behavior',
+    staff_behavior: "Today's Menu",
+    today_menu:     "Today's Menu",
     // Meal type names (English — shown as-is)
     'Breakfast':               'Breakfast',
     'Lunch':                   'Lunch',
@@ -120,7 +119,8 @@ const TRANSLATIONS = {
     food_taste:     'உணவின் சுவை',
     food_hygiene:   'உணவு சுகாதாரம்',
     cleanliness:    'தூய்மை',
-    staff_behavior: 'ஊழியர்களின் நடத்தை',
+    staff_behavior: 'இன்றைய மெனு',
+    today_menu:     'இன்றைய மெனு',
     // Meal type names in Tamil
     'Breakfast':               'காலை உணவு',
     'Lunch':                   'மதிய உணவு',
@@ -135,7 +135,7 @@ const RATING_FIELDS = [
   { key: 'food_taste', emoji: '😋' },
   { key: 'food_hygiene', emoji: '🧼' },
   { key: 'cleanliness', emoji: '✨' },
-  { key: 'staff_behavior', emoji: '👨‍🍳' },
+  { key: 'staff_behavior', emoji: '🍽️' },
 ];
 
 const MOOD = {
@@ -151,17 +151,15 @@ const OVERALL_FACE = ['🤔', '😢', '😕', '😐', '😊', '🤩'];
 
 const INITIAL_RATINGS = {
   food_quality: 0, food_taste: 0,
-  cleanliness: 0, staff_behavior: 0, food_hygiene: 0,
+  cleanliness: 0, staff_behavior: 0, today_menu: 0, food_hygiene: 0,
 };
 
 // ── Login Screen ──────────────────────────────────────────────
-function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
+function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [shakeAnim] = useState(new Animated.Value(0));
-  const [showSettings, setShowSettings] = useState(false);
-  const [ipInput, setIpInput] = useState('');
 
   const shake = () => {
     Animated.sequence([
@@ -183,21 +181,6 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
       shake();
       Alert.alert('❌ Invalid Credentials', 'Please check your username and password.');
     }
-  };
-
-  const openSettings = () => {
-    const match = apiUrl ? apiUrl.match(/http:\/\/([^:]+):(\d+)/) : null;
-    setIpInput(match ? match[1] : '');
-    setShowSettings(true);
-  };
-
-  const saveSettings = () => {
-    const ip = ipInput.trim();
-    if (!ip) { Alert.alert('\u26a0\ufe0f Invalid IP', 'Please enter a valid IP address.'); return; }
-    const newUrl = `http://${ip}:8000`;
-    if (onSaveUrl) onSaveUrl(newUrl);
-    setShowSettings(false);
-    Alert.alert('\u2705 Server Saved', `Server set to:\n${newUrl}\n\nRestart the app if already logged in.`);
   };
 
   return (
@@ -273,64 +256,9 @@ function LoginScreen({ onLogin, apiUrl, onSaveUrl }) {
 
           </Animated.View>
 
-          {/* Settings button */}
-          <TouchableOpacity onPress={openSettings} style={ls.settingsBtn}>
-            <Text style={ls.settingsBtnText}>⚙️  Configure Server IP</Text>
-          </TouchableOpacity>
-
           <Text style={ls.footer}>🔒 Secure internal system — Brɑkes Indiɑ</Text>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {/* ── Server Settings Modal ── */}
-      <Modal
-        visible={showSettings}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowSettings(false)}
-      >
-        <View style={ls.modalOverlay}>
-          <View style={ls.modalBox}>
-            <Text style={ls.modalTitle}>⚙️ Server Settings</Text>
-            <Text style={ls.modalSub}>Enter your PC's Wi-Fi IP address</Text>
-
-            <Text style={ls.modalLabel}>Current server</Text>
-            <Text style={ls.modalCurrent}>{apiUrl || 'Not set'}</Text>
-
-            <Text style={ls.modalLabel}>New IP Address</Text>
-            <View style={ls.modalInputRow}>
-              <Text style={ls.modalPrefix}>http://</Text>
-              <TextInput
-                style={ls.modalInput}
-                value={ipInput}
-                onChangeText={setIpInput}
-                placeholder="e.g. 10.100.201.78"
-                placeholderTextColor="#A0AEC0"
-                keyboardType="decimal-pad"
-                autoCapitalize="none"
-                autoCorrect={false}
-                selectTextOnFocus={true}
-                returnKeyType="done"
-                onSubmitEditing={saveSettings}
-              />
-              <Text style={ls.modalSuffix}>:8000</Text>
-            </View>
-
-            <View style={ls.modalHintBox}>
-              <Text style={ls.modalHint}>💡 On your PC, open PowerShell and run:</Text>
-              <Text style={ls.modalHintCode}>ipconfig</Text>
-              <Text style={ls.modalHint}>Look for "Wireless LAN" → IPv4 Address</Text>
-            </View>
-
-            <TouchableOpacity style={ls.modalSaveBtn} onPress={saveSettings} activeOpacity={0.85}>
-              <Text style={ls.modalSaveBtnText}>💾  Save & Connect</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={ls.modalCancelBtn} onPress={() => setShowSettings(false)}>
-              <Text style={ls.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -421,8 +349,9 @@ const ls = StyleSheet.create({
 
 // ── Stat Progress Bar ─────────────────────────────────────────
 function StatBar({ label, emoji, value, color }) {
-  const pct = ((value / 5) * 100).toFixed(0);
-  const mood = value >= 4.5 ? '🤩' : value >= 4 ? '😊' : value >= 3 ? '😐' : value >= 2 ? '😕' : value > 0 ? '😢' : '—';
+  const hasVal = typeof value === 'number' && !isNaN(value) && value > 0;
+  const pct = hasVal ? ((value / 5) * 100).toFixed(0) : 0;
+  const mood = !hasVal ? '—' : value >= 4.5 ? '🤩' : value >= 4 ? '😊' : value >= 3 ? '😐' : value >= 2 ? '😕' : '😢';
   return (
     <View style={{ marginBottom: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -432,7 +361,9 @@ function StatBar({ label, emoji, value, color }) {
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Text style={{ fontSize: 14 }}>{mood}</Text>
-          <Text style={{ fontSize: 15, fontWeight: '800', color }}>{value.toFixed(1)}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: hasVal ? color : '#A0AEC0' }}>
+            {hasVal ? value.toFixed(1) : '—'}
+          </Text>
           <Text style={{ fontSize: 12, color: '#A0AEC0' }}>/5</Text>
         </View>
       </View>
@@ -460,12 +391,18 @@ function AdminDashboard({ apiUrl, onLogout }) {
   const [showExportOptions, setShowExportOptions] = useState(false);
 
   const CATS = [
-    { key: 'avg_food_quality',   fbKey: 'food_quality',   label: 'Food Quality',   emoji: '🍱', color: '#1565C0' },
-    { key: 'avg_food_taste',     fbKey: 'food_taste',     label: 'Food Taste',     emoji: '😋', color: '#7B1FA2' },
-    { key: 'avg_food_hygiene',   fbKey: 'food_hygiene',   label: 'Food Hygiene',   emoji: '🧼', color: '#1976D2' },
-    { key: 'avg_cleanliness',    fbKey: 'cleanliness',    label: 'Cleanliness',    emoji: '✨', color: '#00695C' },
-    { key: 'avg_staff_behavior', fbKey: 'staff_behavior', label: 'Staff Behavior', emoji: '👨‍🍳', color: '#E65100' },
+    { key: 'avg_food_quality',   altKey: 'avg_food_quality',   fbKey: 'food_quality',   altFbKey: 'food_quality',   label: 'Food Quality',   emoji: '🍱', color: '#1565C0' },
+    { key: 'avg_food_taste',     altKey: 'avg_food_taste',     fbKey: 'food_taste',     altFbKey: 'food_taste',     label: 'Food Taste',     emoji: '😋', color: '#7B1FA2' },
+    { key: 'avg_food_hygiene',   altKey: 'avg_food_hygiene',   fbKey: 'food_hygiene',   altFbKey: 'food_hygiene',   label: 'Food Hygiene',   emoji: '🧼', color: '#1976D2' },
+    { key: 'avg_cleanliness',    altKey: 'avg_hospitality',    fbKey: 'cleanliness',    altFbKey: 'hospitality',    label: 'Cleanliness',    emoji: '✨', color: '#00695C' },
+    { key: 'avg_staff_behavior', altKey: 'avg_today_menu',     fbKey: 'staff_behavior', altFbKey: 'today_menu',     label: "Today's Menu",   emoji: '🍽️', color: '#E65100' },
   ];
+
+  const getCatVal = (data, c) => {
+    if (!data) return null;
+    const v = data[c.key] ?? (c.altKey ? data[c.altKey] : null);
+    return (typeof v === 'number' && !isNaN(v)) ? v : null;
+  };
 
   const MEAL_COLORS = {
     Breakfast: { bg: '#EBF8FF', color: '#1565C0', border: '#BEE3F8', emoji: '🌅' },
@@ -543,7 +480,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
   }, [apiUrl]);
 
   const overall = summary
-    ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length
+    ? CATS.map(c => getCatVal(summary, c) || 0).reduce((a, b) => a + b, 0) / CATS.length
     : 0;
 
   const healthLabel = overall >= 4.5 ? { text: 'Excellent', color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' }
@@ -658,7 +595,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
                     <>
                       {/* ── Monthly Overview Hero Card ── */}
                       {(() => {
-                        const monthAvg = CATS.map(c => monthlyData[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length;
+                        const monthAvg = CATS.map(c => getCatVal(monthlyData, c) || 0).reduce((a, b) => a + b, 0) / CATS.length;
                         const mHealth = monthAvg >= 4.5 ? { label: 'Excellent', color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' }
                           : monthAvg >= 4   ? { label: 'Good',      color: '#1A5276', bg: '#EBF8FF', border: '#90CDF4' }
                           : monthAvg >= 3   ? { label: 'Average',   color: '#7B4F00', bg: '#FFFBEB', border: '#FAD961' }
@@ -702,7 +639,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
                           <StatBar
                             key={c.key}
                             label={c.label} emoji={c.emoji}
-                            value={monthlyData[c.key] || 0}
+                            value={getCatVal(monthlyData, c)}
                             color={c.color}
                           />
                         ))}
@@ -805,7 +742,7 @@ function AdminDashboard({ apiUrl, onLogout }) {
                   const mc = MEAL_COLORS[item.meal_type] || { bg: '#F1F5F9', color: '#475569', border: '#E2E8F0', emoji: '🍽️' };
                   const avg = ([
                     item.food_quality, item.food_taste, item.food_hygiene,
-                    item.staff_behavior, item.cleanliness,
+                    item.staff_behavior ?? item.today_menu ?? 0, item.cleanliness ?? item.hospitality ?? 0,
                   ].reduce((a, b) => a + b, 0) / 5);
                   return (
                     <View key={item.id ?? idx} style={[ad.recordCard, item.is_critical === 1 && { borderColor: '#FECACA', borderWidth: 2, backgroundColor: '#FEF2F2' }]}>
@@ -1169,6 +1106,7 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
   };
 
   const submit = async () => {
+    if (loading) return;
     const missing = RATING_FIELDS.filter(f => ratings[f.key] === 0);
     if (missing.length) {
       Alert.alert(t('missingRatings'), t('pleaseRate'));
@@ -1191,23 +1129,76 @@ function FeedbackForm({ apiUrl, onLogout, onBack }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          canteen_name:  'Main Canteen',
-          canteen_id:    1,
-          meal_type:     detectedMeal.label,
-          food_quality:  ratings.food_quality,
-          food_taste:    ratings.food_taste,
-          cleanliness:   ratings.cleanliness,
-          staff_behavior:ratings.staff_behavior,
-          food_hygiene:  ratings.food_hygiene,
-          comments:      comments.trim() || null,
+          canteen_name:   'Main Canteen',
+          canteen_id:     1,
+          meal_type:      detectedMeal.label,
+          food_quality:   ratings.food_quality,
+          food_taste:     ratings.food_taste,
+          cleanliness:    ratings.cleanliness,
+          staff_behavior: ratings.staff_behavior ?? ratings.today_menu,
+          today_menu:     ratings.staff_behavior ?? ratings.today_menu,
+          food_hygiene:   ratings.food_hygiene,
+          hospitality:    ratings.cleanliness,
+          comments:       comments.trim() || null,
         }),
       });
-      if (!res.ok) throw new Error('Server error');
+
+      // Check if network redirected the request (supported runtimes)
+      if (res.redirected) {
+        throw new Error('Request was redirected by the network (possible captive portal or corporate firewall interception).');
+      }
+
+      const contentType = res.headers ? (res.headers.get('content-type') || '') : '';
+      const isJson = contentType.toLowerCase().includes('application/json');
+
+      if (!res.ok) {
+        let errMsg = '';
+        if (isJson) {
+          try {
+            const errData = await res.json();
+            errMsg = errData.detail ? (typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail)) : '';
+          } catch (_) {}
+        }
+        throw new Error(errMsg || `HTTP ${res.status}`);
+      }
+
+      if (!isJson) {
+        throw new Error('Unexpected response format from server (received HTML or non-JSON content).');
+      }
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (_) {
+        throw new Error('Invalid JSON response received from server.');
+      }
+
+      if (!data || data.message !== 'Feedback submitted successfully') {
+        const detail = data && data.detail
+          ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
+          : 'Feedback submission not acknowledged by server.';
+        throw new Error(detail);
+      }
+
       setLoading(false);
       showSuccess();
     } catch (e) {
       setLoading(false);
-      Alert.alert(t('connErr'), `${t('connErrMsg')}\n${apiUrl}`);
+      const isHttpError = e.message && (
+        e.message.startsWith('HTTP') ||
+        e.message.includes('[{') ||
+        e.message.includes('Field') ||
+        e.message.includes('JSON') ||
+        e.message.includes('response') ||
+        e.message.includes('redirect') ||
+        e.message.includes('acknowledged') ||
+        e.message.includes('portal') ||
+        e.message.includes('HTML')
+      );
+      Alert.alert(
+        isHttpError ? 'Submission Error' : t('connErr'),
+        isHttpError ? `${e.message}\n${apiUrl}` : `${t('connErrMsg')}\n${apiUrl}`
+      );
     }
   };
 
@@ -1448,29 +1439,15 @@ const s = StyleSheet.create({
 // ── Root App (Login Gate) ─────────────────────────────────────
 export default function App() {
   const [authState, setAuthState] = useState({ user: null, role: null });
-  const [apiUrl, setApiUrl] = useState(API_URL);
-
-  // Load saved API URL
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      setApiUrl('http://localhost:8000');
-    } else {
-      AsyncStorage.getItem(STORAGE_KEY).then(saved => { if (saved) setApiUrl(saved); });
-    }
-  }, []);
 
   const handleLogin = (user, role) => setAuthState({ user, role });
   const handleLogout = () => setAuthState({ user: null, role: null });
-  const handleSaveUrl = (url) => {
-    setApiUrl(url);
-    AsyncStorage.setItem(STORAGE_KEY, url);
-  };
 
   if (!authState.user)
-    return <LoginScreen onLogin={handleLogin} apiUrl={apiUrl} onSaveUrl={handleSaveUrl} />;
+    return <LoginScreen onLogin={handleLogin} />;
 
   if (authState.role === 'admin')
-    return <AdminDashboard apiUrl={apiUrl} onLogout={handleLogout} />;
+    return <AdminDashboard apiUrl={API_URL} onLogout={handleLogout} />;
 
-  return <FeedbackForm apiUrl={apiUrl} onLogout={handleLogout} />;
+  return <FeedbackForm apiUrl={API_URL} onLogout={handleLogout} />;
 }

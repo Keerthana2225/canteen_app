@@ -247,9 +247,9 @@ export default function Reports() {
                 {[
                   { label: 'Quality',  val: m.avg_food_quality },
                   { label: 'Taste',    val: m.avg_food_taste },
-                  { label: 'Hygiene',  val: m.avg_food_hygiene },
-                  { label: 'Staff',    val: m.avg_staff_behavior },
-                  { label: 'Clean',    val: m.avg_cleanliness },
+                  { label: 'Hygiene',      val: m.avg_food_hygiene },
+                  { label: "Today's Menu", val: m.avg_staff_behavior ?? m.avg_today_menu },
+                  { label: 'Clean',        val: m.avg_cleanliness ?? m.avg_hospitality },
                 ].map(c => (
                   <div key={c.label} style={{ marginBottom: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>

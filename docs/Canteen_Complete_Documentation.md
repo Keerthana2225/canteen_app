@@ -183,7 +183,7 @@ const LOCAL_DICTIONARY = {
     food_taste: "Food Taste",
     food_hygiene: "Food Hygiene",
     cleanliness: "Cleanliness",
-    staff_behavior: "Staff Behavior",
+    staff_behavior: "Today's Menu",
     submit: "Submit Feedback",
     comment_warning: "Please write a comment explaining your 1-star rating."
   },
@@ -193,7 +193,7 @@ const LOCAL_DICTIONARY = {
     food_taste: "உணவின் சுவை",
     food_hygiene: "உணவு சுகாதாரம்",
     cleanliness: "சுத்தம் மற்றும் சுகாதாரம்",
-    staff_behavior: "ஊழியர் நடத்தை",
+    staff_behavior: "இன்றைய மெனு",
     submit: "கருத்தைச் சமர்ப்பிக்கவும்",
     comment_warning: "உங்கள் 1-நட்சத்திர மதிப்பீட்டிற்கான காரணத்தை எழுதவும்."
   }

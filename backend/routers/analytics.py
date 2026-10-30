@@ -86,7 +86,9 @@ def get_monthly_analytics(
         "avg_food_taste":     _r(results.avg_food_taste),
         "avg_food_hygiene":   _r(results.avg_food_hygiene),
         "avg_staff_behavior": _r(results.avg_staff_behavior),
+        "avg_today_menu":     _r(results.avg_staff_behavior),
         "avg_cleanliness":    _r(results.avg_cleanliness),
+        "avg_hospitality":    _r(results.avg_cleanliness),
         "avg_overall":        _r(results.avg_overall),
     }
 
@@ -125,7 +127,9 @@ def get_yearly_overview(
             "avg_food_taste":    _r(res.avg_food_taste),
             "avg_food_hygiene":  _r(res.avg_food_hygiene),
             "avg_staff_behavior":_r(res.avg_staff_behavior),
+            "avg_today_menu":    _r(res.avg_staff_behavior),
             "avg_cleanliness":   _r(res.avg_cleanliness),
+            "avg_hospitality":   _r(res.avg_cleanliness),
             "avg_overall":       _r(res.avg_overall),
         })
 
@@ -207,7 +211,9 @@ def get_meal_report(
             "avg_food_taste": _r(res.avg_food_taste),
             "avg_food_hygiene": _r(res.avg_food_hygiene),
             "avg_staff_behavior": _r(res.avg_staff_behavior),
+            "avg_today_menu":     _r(res.avg_staff_behavior),
             "avg_cleanliness": _r(res.avg_cleanliness),
+            "avg_hospitality": _r(res.avg_cleanliness),
         })
 
     return {"meal_report": result}

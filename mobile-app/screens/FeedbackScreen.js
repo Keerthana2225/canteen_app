@@ -25,7 +25,7 @@ const RATING_FIELDS = [
   { key: 'food_quality', label: 'Food Quality' },
   { key: 'food_taste', label: 'Food Taste' },
   { key: 'food_hygiene', label: 'Food Hygiene' },
-  { key: 'staff_behavior', label: 'Staff Behavior' },
+  { key: 'staff_behavior', label: "Today's Menu" },
   { key: 'hospitality', label: 'Hospitality' },
 ];
 
@@ -82,6 +82,7 @@ const FeedbackScreen = () => {
 
   // ── Submit ────────────────────────────────────────────────
   const handleSubmit = async () => {
+    if (loading) return;
     if (!validate()) return;
     setLoading(true);
 
@@ -93,7 +94,9 @@ const FeedbackScreen = () => {
       food_taste: ratings.food_taste,
       food_hygiene: ratings.food_hygiene,
       staff_behavior: ratings.staff_behavior,
+      today_menu: ratings.staff_behavior,
       hospitality: ratings.hospitality,
+      cleanliness: ratings.hospitality,
       comments: comments.trim() || null,
       // ⚠️ NO name, email, ID, device info — fully anonymous
     };

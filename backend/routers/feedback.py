@@ -38,11 +38,12 @@ def submit_feedback(payload: schemas.FeedbackCreate, db: Session = Depends(get_d
     overall_rating < 2 → is_critical = 1.
     If any individual rating = 1, comments must be provided (validated by schema).
     """
+    staff_val = payload.staff_behavior if payload.staff_behavior is not None else payload.today_menu
     overall = (
         payload.food_quality +
         payload.food_taste +
         payload.food_hygiene +
-        payload.staff_behavior +
+        staff_val +
         payload.cleanliness
     ) / 5.0
 
@@ -53,7 +54,7 @@ def submit_feedback(payload: schemas.FeedbackCreate, db: Session = Depends(get_d
         food_quality   = payload.food_quality,
         food_taste     = payload.food_taste,
         food_hygiene   = payload.food_hygiene,
-        staff_behavior = payload.staff_behavior,
+        staff_behavior = staff_val,
         cleanliness    = payload.cleanliness,
         overall_rating = round(overall, 2),
         is_critical    = 1 if overall <= 2 else 0,
@@ -82,17 +83,17 @@ def get_summary(
     """Return average ratings, overall avg, critical count, and total feedback count."""
     q = db.query(models.Feedback)
 
-    if meal_type:
+    if meal_type and isinstance(meal_type, str):
         q = q.filter(models.Feedback.meal_type == meal_type)
-    if canteen_name:
+    if canteen_name and isinstance(canteen_name, str):
         q = q.filter(models.Feedback.canteen_name == canteen_name)
-    if from_date:
+    if from_date and isinstance(from_date, (date, str)):
         q = q.filter(models.Feedback.feedback_date >= from_date)
-    if to_date:
+    if to_date and isinstance(to_date, (date, str)):
         q = q.filter(models.Feedback.feedback_date <= to_date)
-    if month:
+    if month and isinstance(month, int):
         q = q.filter(extract("month", models.Feedback.feedback_date) == month)
-    if year:
+    if year and isinstance(year, int):
         q = q.filter(extract("year", models.Feedback.feedback_date) == year)
 
     results = q.with_entities(
@@ -109,17 +110,21 @@ def get_summary(
     def _round(val):
         return round(float(val), 2) if val is not None else 0.0
 
+    avg_staff = _round(results.avg_staff_behavior)
+    avg_clean = _round(results.avg_cleanliness)
     return schemas.SummaryResponse(
         avg_food_quality   = _round(results.avg_food_quality),
         avg_food_taste     = _round(results.avg_food_taste),
         avg_food_hygiene   = _round(results.avg_food_hygiene),
-        avg_staff_behavior = _round(results.avg_staff_behavior),
-        avg_cleanliness    = _round(results.avg_cleanliness),
+        avg_staff_behavior = avg_staff,
+        avg_today_menu     = avg_staff,
+        avg_cleanliness    = avg_clean,
+        avg_hospitality    = avg_clean,
         avg_overall        = _round(results.avg_overall),
         total_count        = results.total_count or 0,
         critical_count     = int(results.critical_count or 0),
-        meal_type_filter   = meal_type,
-        canteen_filter     = canteen_name,
+        meal_type_filter   = meal_type if isinstance(meal_type, str) else None,
+        canteen_filter     = canteen_name if isinstance(canteen_name, str) else None,
     )
 
 

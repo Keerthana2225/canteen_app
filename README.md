@@ -77,7 +77,7 @@ The system operates on a modern 3-tier architecture:
 4.  **Admin Dashboard (Client)**: A website that fetches aggregated data from the backend to display charts, export to Excel, and filter critical records.
 
 ### Modules Description
-*   **Feedback Module**: The core interface where users provide 1-5 star ratings for Food Quality, Food Taste, Food Hygiene, Cleanliness, and Staff Behavior.
+*   **Feedback Module**: The core interface where users provide 1-5 star ratings for Food Quality, Food Taste, Food Hygiene, Cleanliness, and Today's Menu (mapped to `staff_behavior` in database).
 *   **Validation Module**: Enforces strict data rules (e.g., forcing a user to type a comment if they select a 1-star rating).
 *   **Meal Detection Module**: A time-based algorithm that automatically assigns the correct meal tag based on the local device clock.
 *   **Analytics Module**: Code on the server that does math on the database data (averages, counts, critical sums) so the dashboard can display it easily.

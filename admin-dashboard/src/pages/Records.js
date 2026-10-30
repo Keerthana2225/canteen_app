@@ -41,8 +41,8 @@ function DetailedBreakdown({ row }) {
       <MetricBadge label="Qual" value={row.food_quality} />
       <MetricBadge label="Taste" value={row.food_taste} />
       <MetricBadge label="Hygiene" value={row.food_hygiene} />
-      <MetricBadge label="Staff" value={row.staff_behavior} />
-      <MetricBadge label="Clean" value={row.cleanliness} />
+      <MetricBadge label="Menu" value={row.staff_behavior ?? row.today_menu ?? '—'} />
+      <MetricBadge label="Clean" value={row.cleanliness ?? row.hospitality ?? '—'} />
     </div>
   );
 }

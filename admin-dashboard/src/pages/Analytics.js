@@ -10,11 +10,11 @@ const API = `http://${window.location.hostname}:8000`;
 const COLORS = ['#1a56db','#7c3aed','#0891b2','#059669','#d97706'];
 
 const CATS = [
-  { key: 'avg_food_quality',   label: 'Food Quality' },
-  { key: 'avg_food_taste',     label: 'Food Taste' },
-  { key: 'avg_food_hygiene',   label: 'Food Hygiene' },
-  { key: 'avg_cleanliness',    label: 'Cleanliness' },
-  { key: 'avg_staff_behavior', label: 'Staff Behavior' },
+  { key: 'avg_food_quality',   altKey: 'avg_food_quality',   label: 'Food Quality' },
+  { key: 'avg_food_taste',     altKey: 'avg_food_taste',     label: 'Food Taste' },
+  { key: 'avg_food_hygiene',   altKey: 'avg_food_hygiene',   label: 'Food Hygiene' },
+  { key: 'avg_cleanliness',    altKey: 'avg_hospitality',    label: 'Cleanliness' },
+  { key: 'avg_staff_behavior', altKey: 'avg_today_menu',     label: "Today's Menu" },
 ];
 
 export default function Analytics() {
@@ -49,13 +49,16 @@ export default function Analytics() {
     fetchData();
   };
 
-  const chartData = CATS.map(c => ({
-    name:  c.label,
-    value: parseFloat(((summary?.[c.key]) || 0).toFixed(1)),
-  }));
+  const chartData = CATS.map(c => {
+    const v = summary?.[c.key] ?? summary?.[c.altKey];
+    return {
+      name:  c.label,
+      value: v !== undefined && v !== null ? parseFloat(Number(v).toFixed(1)) : 0,
+    };
+  });
 
   const overall = summary
-    ? CATS.map(c => summary[c.key] || 0).reduce((a, b) => a + b, 0) / CATS.length
+    ? CATS.map(c => (summary[c.key] ?? summary[c.altKey]) || 0).reduce((a, b) => a + b, 0) / CATS.length
     : 0;
 
   return (
